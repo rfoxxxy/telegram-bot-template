@@ -19,7 +19,7 @@ use_database = false
 use_uvloop = false
 use_sentry = false
 use_redis_fsm = true
-use_modern_callback = true
+use_modern_callback = false
 use_file_logs = false
 use_apscheduler = false
 

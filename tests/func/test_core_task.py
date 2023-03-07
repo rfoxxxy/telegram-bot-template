@@ -1,9 +1,6 @@
 import asyncio
 import logging
-import os
 import sys
-
-os.environ["DISABLE_UVLOOP"] = "True"
 
 from aiogram import Bot, Dispatcher
 

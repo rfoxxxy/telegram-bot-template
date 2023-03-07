@@ -37,6 +37,7 @@ pytest-mock = "^3.10.0"
 autoflake = "^2.0.0"
 pylint = "^2.15.9"
 pytest-asyncio = "^0.20.3"
+pytest-cov = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -47,3 +48,5 @@ log_cli = false
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = "-rsxX -l --tb=short"
+xfail_strict = true

@@ -1,6 +1,9 @@
+import os
 import sys
 
 import pytest
+
+os.environ["DISABLE_UVLOOP"] = "True"
 
 sys.path.append('./')
 
