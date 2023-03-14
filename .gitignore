@@ -147,3 +147,5 @@ jobs.sqlite3
 .DS_Store
 
 config.*
+
+_test.py

@@ -13,7 +13,7 @@ async def start_handler(message: types.Message):
 
 
 @dp.message_handler(commands=['test'])
-async def start_handler(message: types.Message):
+async def test_handler(message: types.Message):
     keyboard = InlineKeyboard(
         ButtonRow(
             MarkdownViewWebAppButton(

@@ -47,9 +47,8 @@ class ModuleLoader:
             and not f[:-1].endswith("__pycache__")
             and not (basename(f[:-1]).startswith("_") and self.is_prod)
         ]
-        return [
-            module for module in all_py_modules + all_dir_modules if module
-        ]
+        return sorted(
+            [module for module in all_py_modules + all_dir_modules if module])
 
     def get_loadable(self) -> List[str]:
         """Get loadable modules
