@@ -13,7 +13,7 @@ from bot_template.core.task_manager import \
     BaseCoreTask  # pylint: disable=import-error
 
 
-def test_task(config_manager, event_loop):
+def test_core_tasks(config_manager, event_loop):
     class TestTask(BaseCoreTask):
         name = "test task"
 
@@ -28,9 +28,8 @@ def test_task(config_manager, event_loop):
     task = TestTask()
     core.add_core_task(task)
     core.add_core_tasks(*[task for _ in range(4)])
-    # LOGGER.info(core._BotCore__pending_core_tasks)  # pylint: disable=protected-access
 
-    assert len(core._BotCore__pending_core_tasks) == 5  # pylint: disable=protected-access
+    assert len(core.task_manager._TaskManager__pending_core_tasks) == 5  # pylint: disable=protected-access
     core._BotCore__run_core_tasks()  # pylint: disable=protected-access
 
     event_loop.run_until_complete(polling_mock())

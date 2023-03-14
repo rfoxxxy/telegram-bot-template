@@ -1,22 +1,20 @@
-from asyncio import AbstractEventLoop, Task
-from typing import Awaitable, List, Set
+from asyncio import AbstractEventLoop
+from typing import Awaitable
 
 from aiogram import Dispatcher, executor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
 from bot_template.core.config_manager import ConfigManager
-from bot_template.core.config_manager.types.exceptions.feature_unavailable import \
-    FeatureUnavailableError
 from bot_template.core.loader import ModuleLoader
-from bot_template.core.task_manager import BaseCoreTask, BaseSchedulerTask
+from bot_template.core.task_manager import (BaseCoreTask, BaseSchedulerTask,
+                                            TaskManager)
 
 
 class BotCore:
     __slots__ = [
         "project_name", "is_prod", "dp", "loop", "config", "webhook",
-        "scheduler", "__pending_core_tasks", "__pending_scheduler_tasks",
-        "__running_core_tasks"
+        "task_manager"
     ]
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -34,10 +32,7 @@ class BotCore:
         self.loop = loop
         self.config = config
         self.webhook = config.get_item("features", "use_webhook")
-        self.scheduler = scheduler
-        self.__pending_core_tasks: List[BaseCoreTask] = []
-        self.__pending_scheduler_tasks: List[BaseSchedulerTask] = []
-        self.__running_core_tasks: Set[Task] = set()
+        self.task_manager = TaskManager(self.loop, scheduler)
 
         if self.dp is not None:
             self.dp.bot["core"] = self
@@ -48,30 +43,17 @@ class BotCore:
         Args:
             task (BaseCoreTask): Task object
         """
-        self.__pending_core_tasks.append(task)
+        self.task_manager.add_core_task(task)
 
     def add_core_tasks(self, *args: BaseCoreTask):
         """Add multiple core tasks. Core tasks running once on startup
         """
-        self.__pending_core_tasks.extend(args)
+        self.task_manager.add_core_tasks(*args)
 
     def __run_core_tasks(self):
         """Run core tasks
         """
-        ready_tasks = [
-            task for task in self.__pending_core_tasks
-            if hasattr(task, "name")
-        ]
-        if not ready_tasks:
-            return
-        logger.info(
-            f"Core tasks to be runned: {', '.join([task.name for task in ready_tasks])}"
-        )
-        for task in ready_tasks:
-            logger.info(f"Running core task {task.name}...")
-            _task = self.loop.create_task(task.run_task())
-            self.__running_core_tasks.add(_task)
-            _task.add_done_callback(self.__running_core_tasks.discard)
+        return self.task_manager.run_core_tasks()
 
     def add_scheduler_task(self, task: BaseSchedulerTask):
         """Add scheduler task to run
@@ -79,12 +61,12 @@ class BotCore:
         Args:
             task (BaseSchedulerTask): Task object
         """
-        self.__pending_scheduler_tasks.append(task)
+        self.task_manager.add_scheduler_task(task)
 
     def add_scheduler_tasks(self, *args: BaseSchedulerTask):
         """Add multiple scheduler tasks
         """
-        self.__pending_scheduler_tasks.extend(args)
+        self.task_manager.add_scheduler_tasks(*args)
 
     def push_pending_scheduler_tasks(self):
         """Push pending scheduler tasks to scheduler
@@ -92,28 +74,7 @@ class BotCore:
         Raises:
             FeatureUnavailableError: feature use_apscheduler required in order to call this method
         """
-        if not self.scheduler:
-            raise FeatureUnavailableError(
-                "Feature use_apscheduler required in order to call this method"
-            )
-        ready_tasks = [
-            task for task in self.__pending_scheduler_tasks
-            if hasattr(task, "name") and hasattr(task, "trigger")
-            and hasattr("task", "force_reschedule")
-        ]
-        if not ready_tasks:
-            return
-        for task in ready_tasks:
-            if task.force_reschedule:
-                if self.scheduler.get_job(job_id=task.name):
-                    self.scheduler.remove_job(job_id=task.name)
-            self.scheduler.add_job(
-                func=task.run_task,
-                trigger=task.trigger,
-                id=task.name,
-                misfire_grace_time=1 if not hasattr(task, "misfire_grace_time")
-                else task.misfire_grace_time)
-            self.__pending_scheduler_tasks.remove(task)
+        return self.task_manager.push_pending_scheduler_tasks()
 
     def cancel_scheduler_task(self, task_name: str) -> bool:
         """Cancel scheduler task
@@ -127,13 +88,7 @@ class BotCore:
         Returns:
             bool: success
         """
-        if not self.scheduler:
-            raise FeatureUnavailableError(
-                "Feature use_apscheduler required in order to call this method"
-            )
-        if self.scheduler.get_job(job_id=task_name):
-            self.scheduler.remove_job(job_id=task_name)
-        return True
+        return self.task_manager.cancel_scheduler_task(task_name)
 
     async def _startup(self, dispatcher: Dispatcher):
         """Main startup logic
@@ -153,8 +108,8 @@ class BotCore:
                 db  # pylint: disable=import-outside-toplevel
             await db.init_database()
 
-        if self.scheduler:
-            self.scheduler.start()
+        if self.task_manager and self.task_manager.scheduler:
+            self.task_manager.scheduler.start()
             self.push_pending_scheduler_tasks()
 
         self.__run_core_tasks()
