@@ -25,9 +25,6 @@ config = ConfigManager("config.toml", True)
 features = list(
     filter(lambda feature: feature[1],
            config.get_section("features").items()))
-logger.info(
-    f"Using features: {', '.join([x.split('_', maxsplit=1)[1] for x, _ in features if x.startswith('use')])}"
-)
 
 # since nest_asyncio doesn't support uvloop and other custom event loop policies,
 # there's a double-edged sword - allow nesting slow asyncio or use faster uvloop w/o nesting
@@ -51,12 +48,6 @@ is_prod = os.environ.get("ENV") == "production" or config.get_item(
 is_custom_server = config.get_item("features", "use_custom_server")
 PROJECT_NAME = __name__
 _startup_time = time.time()
-if is_prod:
-    logger.warning("Running in production!")
-if is_custom_server:
-    logger.warning(
-        f"Using custom BotAPI server: {config.get_item('features.custom_server', 'server')}"
-    )
 
 admins = config.get_item("bot", "admins")
 RECREATE_DB = args.recreate

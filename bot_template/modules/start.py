@@ -18,7 +18,7 @@ async def test_handler(message: types.Message):
         ButtonRow(
             MarkdownViewWebAppButton(
                 "Read me",
-                "https://raw.githubusercontent.com/aiogram/aiogram/dev-2.x/README.md"
+                "https://raw.githubusercontent.com/rfoxxxy/telegram-bot-template/main/README.md"
             )),
         ButtonRow(CallbackButton("test callback", "test_callback"),
                   WebAppButton("test webapp", "https://google.com")),
