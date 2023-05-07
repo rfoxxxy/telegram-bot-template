@@ -1,7 +1,15 @@
 from loguru import logger
 
-from bot_template import (PROJECT_NAME, config, dp, features, is_custom_server,
-                          is_prod, loop, scheduler)
+from bot_template import (
+    PROJECT_NAME,
+    config,
+    dp,
+    features,
+    is_custom_server,
+    is_prod,
+    loop,
+    scheduler,
+)
 from bot_template.core import BotCore
 
 logger.info(

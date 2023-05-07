@@ -20,8 +20,9 @@ class BaseProvider(ABC):
         ...
 
     @abstractmethod
-    def set_item(self, section: str, variable: str,
-                 item: typing.Any) -> typing.Any:
+    def set_item(
+        self, section: str, variable: str, item: typing.Any
+    ) -> typing.Any:
         ...
 
     @abstractmethod

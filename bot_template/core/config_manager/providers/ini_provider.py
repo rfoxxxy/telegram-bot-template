@@ -4,8 +4,9 @@ from os import PathLike
 from pathlib import Path
 
 from bot_template.core.config_manager.providers import BaseProvider
-from bot_template.core.config_manager.types.exceptions import \
-    InvalidConfigTypeError
+from bot_template.core.config_manager.types.exceptions import (
+    InvalidConfigTypeError,
+)
 
 
 class IniProvider(BaseProvider):
@@ -17,7 +18,8 @@ class IniProvider(BaseProvider):
 
         if self.config_type not in self.extensions:
             raise InvalidConfigTypeError(
-                f"Invalid config type: {self.config_type}")
+                f"Invalid config type: {self.config_type}"
+            )
 
         self.config = configparser.ConfigParser()
         self.config.read(self.config_path)
@@ -34,10 +36,12 @@ class IniProvider(BaseProvider):
             formatted_data = data in ["yes", "true"]
         elif len(data.split(",")) > 1:
             formatted_data = [
-                item for item in [
+                item
+                for item in [
                     IniProvider.__format_ini_variable(var.strip())
                     for var in data.split(",")
-                ] if item
+                ]
+                if item
             ]
 
         return formatted_data
@@ -47,7 +51,8 @@ class IniProvider(BaseProvider):
         current_section = data.copy()
         for var in current_section:
             current_section[var] = IniProvider.__format_ini_variable(
-                current_section[var])
+                current_section[var]
+            )
         return current_section
 
     @property
@@ -83,8 +88,9 @@ class IniProvider(BaseProvider):
         """
         return self.get_section(section).get(variable)
 
-    def set_item(self, section: str, variable: str,
-                 item: typing.Any) -> typing.Any:
+    def set_item(
+        self, section: str, variable: str, item: typing.Any
+    ) -> typing.Any:
         """Set dictionary item by it's section and var name
 
         Args:

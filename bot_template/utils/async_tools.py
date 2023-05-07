@@ -28,17 +28,14 @@ def run_sync(func: Callable, *args, **kwargs) -> Awaitable:
     Returns:
         Awaitable: coroutine that can be awaited
     """
-    return asyncio.get_running_loop() \
-        .run_in_executor(None,
-                         functools.partial(func,
-                                           *args,
-                                           **kwargs))
+    return asyncio.get_running_loop().run_in_executor(
+        None, functools.partial(func, *args, **kwargs)
+    )
 
 
-def run_async(func: Awaitable,
-              *args,
-              prevent_using_loop: bool = False,
-              **kwargs) -> typing.Any:
+def run_async(
+    func: Awaitable, *args, prevent_using_loop: bool = False, **kwargs
+) -> typing.Any:
     """Run async function as sync and block till end
 
     Args:
@@ -52,8 +49,11 @@ def run_async(func: Awaitable,
         loop = asyncio.get_running_loop()
     except RuntimeError:
         loop = None
-    if (loop and loop.is_running() and config.get_item(
-            "features", "use_uvloop")) or prevent_using_loop:
+    if (
+        loop
+        and loop.is_running()
+        and config.get_item("features", "use_uvloop")
+    ) or prevent_using_loop:
         thread = _RunAsyncInThread(func, args, kwargs)
         thread.start()
         thread.join()

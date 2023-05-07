@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, engine
 from alembic import context
 from bot_template import db
 from bot_template.core.config_manager import ConfigManager
-from bot_template.database.models import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,7 +26,8 @@ def get_url():
         password=bot_config.get_item("features.database", "password"),
         host=bot_config.get_item("features.database", "addr"),
         port=bot_config.get_item("features.database", "port"),
-        database=bot_config.get_item("features.database", "database_name"))
+        database=bot_config.get_item("features.database", "database_name"),
+    )
 
 
 def run_migrations_offline() -> None:
@@ -43,9 +43,9 @@ def run_migrations_offline() -> None:
 
     """
     url = get_url()
-    context.configure(url=url,
-                      target_metadata=target_metadata,
-                      literal_binds=True)
+    context.configure(
+        url=url, target_metadata=target_metadata, literal_binds=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -60,8 +60,9 @@ def run_migrations_online() -> None:
     """
     connectable = create_engine(get_url())
     with connectable.connect() as connection:
-        context.configure(connection=connection,
-                          target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()

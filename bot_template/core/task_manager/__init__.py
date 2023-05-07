@@ -1,24 +1,31 @@
 from asyncio import AbstractEventLoop, Task
 from typing import List, Set
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+try:
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+except ImportError:
+    pass
 from loguru import logger
 
-from bot_template.core.config_manager.types.exceptions.feature_unavailable import \
-    FeatureUnavailableError
+from bot_template.core.config_manager.types.exceptions.feature_unavailable import (
+    FeatureUnavailableError,
+)
 from bot_template.core.task_manager.core import BaseCoreTask
 from bot_template.core.task_manager.scheduler import BaseSchedulerTask
 
 
 class TaskManager:  # TODO: make TaskManager a base class by analogy with ConfigManager and similar
     __slots__ = [
-        "scheduler", "loop", "__pending_core_tasks",
-        "__pending_scheduler_tasks", "__running_core_tasks"
+        "scheduler",
+        "loop",
+        "__pending_core_tasks",
+        "__pending_scheduler_tasks",
+        "__running_core_tasks",
     ]
 
-    def __init__(self,
-                 loop: AbstractEventLoop,
-                 scheduler: AsyncIOScheduler | None = None) -> None:
+    def __init__(
+        self, loop: AbstractEventLoop, scheduler: "AsyncIOScheduler" = None
+    ) -> None:
         self.scheduler = scheduler
         self.loop = loop
         self.__pending_core_tasks: List[BaseCoreTask] = []
@@ -34,16 +41,13 @@ class TaskManager:  # TODO: make TaskManager a base class by analogy with Config
         self.__pending_core_tasks.append(task)
 
     def add_core_tasks(self, *args: BaseCoreTask):
-        """Add multiple core tasks. Core tasks running once on startup
-        """
+        """Add multiple core tasks. Core tasks running once on startup"""
         self.__pending_core_tasks.extend(args)
 
     def run_core_tasks(self):
-        """Run core tasks
-        """
+        """Run core tasks"""
         ready_tasks = [
-            task for task in self.__pending_core_tasks
-            if hasattr(task, "name")
+            task for task in self.__pending_core_tasks if hasattr(task, "name")
         ]
         if not ready_tasks:
             return
@@ -65,8 +69,7 @@ class TaskManager:  # TODO: make TaskManager a base class by analogy with Config
         self.__pending_scheduler_tasks.append(task)
 
     def add_scheduler_tasks(self, *args: BaseSchedulerTask):
-        """Add multiple scheduler tasks
-        """
+        """Add multiple scheduler tasks"""
         self.__pending_scheduler_tasks.extend(args)
 
     def push_pending_scheduler_tasks(self):
@@ -80,8 +83,10 @@ class TaskManager:  # TODO: make TaskManager a base class by analogy with Config
                 "Feature use_apscheduler required in order to call this method"
             )
         ready_tasks = [
-            task for task in self.__pending_scheduler_tasks
-            if hasattr(task, "name") and hasattr(task, "trigger")
+            task
+            for task in self.__pending_scheduler_tasks
+            if hasattr(task, "name")
+            and hasattr(task, "trigger")
             and hasattr("task", "force_reschedule")
         ]
         if not ready_tasks:
@@ -94,8 +99,10 @@ class TaskManager:  # TODO: make TaskManager a base class by analogy with Config
                 func=task.run_task,
                 trigger=task.trigger,
                 id=task.name,
-                misfire_grace_time=1 if not hasattr(task, "misfire_grace_time")
-                else task.misfire_grace_time)
+                misfire_grace_time=1
+                if not hasattr(task, "misfire_grace_time")
+                else task.misfire_grace_time,
+            )
             self.__pending_scheduler_tasks.remove(task)
 
     def cancel_scheduler_task(self, task_name: str) -> bool:

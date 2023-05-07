@@ -5,8 +5,9 @@ from pathlib import Path
 import toml
 
 from bot_template.core.config_manager.providers import BaseProvider
-from bot_template.core.config_manager.types.exceptions import \
-    InvalidConfigTypeError
+from bot_template.core.config_manager.types.exceptions import (
+    InvalidConfigTypeError,
+)
 
 
 class TomlProvider(BaseProvider):
@@ -18,7 +19,8 @@ class TomlProvider(BaseProvider):
 
         if self.config_type not in self.extensions:
             raise InvalidConfigTypeError(
-                f"Invalid config type: {self.config_type}")
+                f"Invalid config type: {self.config_type}"
+            )
 
         self.config = toml.load(self.config_path)
 
@@ -52,8 +54,9 @@ class TomlProvider(BaseProvider):
         """
         return self.get_section(section).get(variable)
 
-    def set_item(self, section: str, variable: str,
-                 item: typing.Any) -> typing.Any:
+    def set_item(
+        self, section: str, variable: str, item: typing.Any
+    ) -> typing.Any:
         """Set dictionary item by it's section and var name
 
         Args:
@@ -65,7 +68,7 @@ class TomlProvider(BaseProvider):
             typing.Any: setted item
         """
         current_section = self.config
-        sections = section.split('.')
+        sections = section.split(".")
         for _section in sections:
             current_section = current_section.setdefault(_section, {})
         current_section[variable] = item

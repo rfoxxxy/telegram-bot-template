@@ -1,4 +1,5 @@
-from bot_template.keyboards.middlewares.resolve_button import \
-    CallbackButtonMiddleware
+from bot_template.keyboards.middlewares.resolve_button import (
+    CallbackButtonMiddleware,
+)
 
-__all__ = ("CallbackButtonMiddleware", )
+__all__ = ("CallbackButtonMiddleware",)

@@ -18,4 +18,5 @@ class AdminFilter(BoundFilter):
 
 dp.filters_factory.bind(
     AdminFilter,
-    event_handlers=[dp.message_handlers, dp.callback_query_handlers])
+    event_handlers=[dp.message_handlers, dp.callback_query_handlers],
+)

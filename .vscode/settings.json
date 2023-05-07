@@ -9,7 +9,7 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "python.formatting.provider": "yapf",
+    "python.formatting.provider": "none",
     "python.defaultInterpreterPath": "/usr/bin/python3",
     "python.languageServer": "Pylance",
     "python.linting.pycodestyleEnabled": true,
@@ -27,5 +27,8 @@
             "name": "callbacks",
             "database": "static/callbacks.sqlite3"
         }
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }

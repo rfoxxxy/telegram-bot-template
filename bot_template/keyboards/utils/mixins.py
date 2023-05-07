@@ -1,4 +1,4 @@
-class KeyboardMarkupMixin():
+class KeyboardMarkupMixin:
     def to_python(self) -> dict:
         return self._build().to_python()
 

@@ -12,9 +12,11 @@ class AbstractDataclass(ABC):
 
 
 @dataclass(slots=True)
-class BaseKeyboardButton(AbstractDataclass):  # pylint: disable=too-many-instance-attributes
-    """Base button object
-    """
+class BaseKeyboardButton(
+    AbstractDataclass
+):  # pylint: disable=too-many-instance-attributes
+    """Base button object"""
+
     type: str
     text: str
     callback_data: str = field(default=None)
@@ -25,7 +27,7 @@ class BaseKeyboardButton(AbstractDataclass):  # pylint: disable=too-many-instanc
     additional_data: dict = field(default=None)
 
     def __repr__(self) -> str:
-        return f'<KeyboardButton type={self.type} text={self.text} at {hex(id(self))}>'  # yapf: disable
+        return f"<KeyboardButton type={self.type} text={self.text} at {hex(id(self))}>"  # yapf: disable
 
     @abstractmethod
     async def build_button(self, ctx):
@@ -43,4 +45,4 @@ class ButtonRow:
         self.buttons.append(button)
 
     def __repr__(self) -> str:
-        return f'<ButtonRow object at {hex(id(self))}>'  # yapf: disable
+        return f"<ButtonRow object at {hex(id(self))}>"  # yapf: disable

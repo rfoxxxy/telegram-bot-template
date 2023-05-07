@@ -14,17 +14,17 @@ throttling = 0.5
 [core]
 supported_modules = ["filters", "middlewares", "modules"]
 
-# some fucking integrations and memes
+# some integrations and memes
 [features]
 use_webhook = false
-use_custom_server = true
-use_database = false
-use_uvloop = false
-use_sentry = false
-use_redis_fsm = true
-use_modern_callback = false
+use_custom_server = false
+use_database = false        # group: database
+use_uvloop = false          # group: uvloop
+use_sentry = false          # group: sentry
+use_redis_fsm = false       # group: redis
+use_modern_callback = false # group: keyboards
 use_file_logs = false
-use_apscheduler = false
+use_apscheduler = false     # group: scheduler
 
 [features.custom_server]
 server = 'https://api.telegram.org/'

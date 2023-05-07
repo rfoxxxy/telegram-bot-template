@@ -16,8 +16,10 @@ def get_button_text(call: types.CallbackQuery, callback_data: str) -> str:
     Returns:
         str: Callback button's text
     """
-    for row in call.message.reply_markup['inline_keyboard']:
+    if not call.message.reply_markup:
+        return ""
+    for row in call.message.reply_markup["inline_keyboard"]:
         for column in row:
-            if column['callback_data'] == callback_data:
-                return column['text']
+            if column["callback_data"] == callback_data:
+                return column["text"]
     return ""

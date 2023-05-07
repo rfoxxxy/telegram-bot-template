@@ -2,21 +2,30 @@ import typing
 from os import PathLike
 from pathlib import Path
 
-from bot_template.core.config_manager.providers import (BaseProvider,
-                                                        IniProvider,
-                                                        TomlProvider)
-from bot_template.core.config_manager.types.exceptions import \
-    InvalidConfigTypeError
+from bot_template.core.config_manager.providers import (
+    BaseProvider,
+    IniProvider,
+    TomlProvider,
+)
+from bot_template.core.config_manager.types.exceptions import (
+    InvalidConfigTypeError,
+)
 
 
-class ConfigManager():
+class ConfigManager:
     def __init__(self, config: BaseProvider | str, create: bool = False):
         if not isinstance(config, BaseProvider):
             self.config_path = Path(config).resolve()
             self.config_type = self.config_path.suffix.lstrip(".")
-            if not self.config_path.exists() and Path("tests/e-config.toml").resolve().exists() and create:
+            if (
+                not self.config_path.exists()
+                and Path("tests/e-config.toml").resolve().exists()
+                and create
+            ):
                 with open(self.config_path, "x", encoding="utf-8") as writable:
-                    with open("tests/e-config.toml", "r", encoding="utf-8") as readable:
+                    with open(
+                        "tests/e-config.toml", "r", encoding="utf-8"
+                    ) as readable:
                         writable.write(readable.read())
             match self.config_type:
                 case "toml":
@@ -24,7 +33,9 @@ class ConfigManager():
                 case "ini":
                     self.config_instance = IniProvider(self.config_path)
                 case _:
-                    raise InvalidConfigTypeError(f"Invalid config type: {self.config_type}")
+                    raise InvalidConfigTypeError(
+                        f"Invalid config type: {self.config_type}"
+                    )
         else:
             self.config_instance = config
             self.config_path = self.config_instance.config_path
@@ -57,7 +68,9 @@ class ConfigManager():
         """
         return self.config_instance.get_item(section, variable)
 
-    def set_item(self, section: str, variable: str, item: typing.Any) -> typing.Any:
+    def set_item(
+        self, section: str, variable: str, item: typing.Any
+    ) -> typing.Any:
         """Set dictionary item by it's section and var name
 
         Args:

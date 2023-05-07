@@ -14,7 +14,9 @@ class ThrottlingMiddleware(BaseMiddleware):
             await message.reply("Тише-тише! Попробуй снова через 1 сек.")
             raise CancelHandler
 
-    async def on_pre_process_callback_query(self, call: CallbackQuery, data: dict):
+    async def on_pre_process_callback_query(
+        self, call: CallbackQuery, data: dict
+    ):
         if not cache.get(call.from_user.id):
             cache[call.from_user.id] = True
             return

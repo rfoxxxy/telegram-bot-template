@@ -3,7 +3,7 @@ from sqlalchemy import inspect
 from bot_template import db
 
 
-class BaseMixin():
+class BaseMixin:
     @classmethod
     async def create(cls, session: db.Session = None, **kwargs):
         if not session:

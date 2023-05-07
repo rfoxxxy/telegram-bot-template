@@ -7,6 +7,6 @@ def get_pay_text(lang: str):
         "tr": "Ödemek",
         "de": "Bezahlen",
         "ar": "الدفع",
-        "uz": "Тўлаш"
+        "uz": "Тўлаш",
     }
     return texts.get(lang, texts.get("en"))
