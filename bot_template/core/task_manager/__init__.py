@@ -14,7 +14,7 @@ from bot_template.core.task_manager.core import BaseCoreTask
 from bot_template.core.task_manager.scheduler import BaseSchedulerTask
 
 
-class TaskManager:  # TODO: make TaskManager a base class by analogy with ConfigManager and similar
+class TaskManager:
     __slots__ = [
         "scheduler",
         "loop",
