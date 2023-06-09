@@ -23,7 +23,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi --with uvloop,sentry,redis,keyboards,database,scheduler \
+    && poetry install --no-interaction --no-ansi --with uvloop,sentry,redis,keyboards,database,scheduler \
     && mkdir -p /data
 
 COPY . /app

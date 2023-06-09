@@ -107,8 +107,8 @@ class BotCore:
             dispatcher (Dispatcher): aiogram dispatcher object
         """
         if self.config.get_item("features", "use_modern_callback"):
-            from bot_template.keyboards.middlewares import (
-                CallbackButtonMiddleware,  # pylint: disable=import-outside-toplevel
+            from bot_template.keyboards.middlewares import (  # pylint: disable=import-outside-toplevel
+                CallbackButtonMiddleware,
             )
 
             dispatcher.middleware.setup(CallbackButtonMiddleware())
