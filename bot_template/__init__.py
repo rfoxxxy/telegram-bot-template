@@ -163,5 +163,7 @@ if config.get_item("features", "use_database"):
             database=config.get_item("features.database", "database_name"),
         ),
         future=True,
+        pool_pre_ping=True,
+        pool_recycle=3600,
     )  # noqa: e126
     db = Database(engine, RECREATE_DB)

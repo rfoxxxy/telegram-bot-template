@@ -87,7 +87,7 @@ class TaskManager:
             for task in self.__pending_scheduler_tasks
             if hasattr(task, "name")
             and hasattr(task, "trigger")
-            and hasattr("task", "force_reschedule")
+            and hasattr(task, "force_reschedule")
         ]
         if not ready_tasks:
             return

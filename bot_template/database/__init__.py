@@ -3,12 +3,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 
+class Base:
+    __allow_unmapped__ = True
+
+
 class Database:
     def __init__(self, engine: AsyncEngine, recreate_db: bool) -> None:
         self.__engine = engine
         self.__recreate_db = recreate_db
-        self.Session: AsyncSession = (
-            sessionmaker(  # pylint: disable=invalid-name
+        self.Session: AsyncSession = (  # pylint: disable=invalid-name
+            sessionmaker(
                 autocommit=False,
                 autoflush=False,
                 expire_on_commit=False,
@@ -17,7 +21,7 @@ class Database:
                 class_=AsyncSession,
             )
         )
-        self.Base = declarative_base()  # pylint: disable=invalid-name
+        self.Base = declarative_base(cls=Base)  # pylint: disable=invalid-name
 
     async def __drop_database(self):
         async with self.__engine.begin() as conn:

@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, engine
 from alembic import context
 from bot_template import db
 from bot_template.core.config_manager import ConfigManager
+from bot_template.database import models  # noqa: W0611
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
