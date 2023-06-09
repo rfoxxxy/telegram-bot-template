@@ -3,9 +3,11 @@ from logging.config import fileConfig
 from sqlalchemy import create_engine, engine
 
 from alembic import context
-from bot_template import db
-from bot_template.core.config_manager import ConfigManager
-from bot_template.database import models  # noqa: W0611
+from bot_template import db  # pylint: disable=import-error
+from bot_template.core.config_manager import (  # pylint: disable=import-error
+    ConfigManager,
+)
+from bot_template.database.models import *  # noqa: W0611  # pylint: disable=import-error,wildcard-import
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
