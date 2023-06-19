@@ -151,9 +151,9 @@ async def _make_request(
                 return req if not json_answer else req.json()
             case _:
                 raise ValueError(f"Invalid request method: {method}")
-    except (
+    except (  # pylint: disable=invalid-name,broad-exception-caught
         Exception
-    ) as e:  # pylint: disable=invalid-name,broad-exception-caught
+    ) as e:
         logger.exception(e)
         raise ConnectionError(e) from e
 
@@ -167,9 +167,9 @@ async def push_file(file):
             timeout=3,
             text_answer=True,
         )
-    except (
+    except (  # pylint: disable=invalid-name,broad-exception-caught
         Exception
-    ) as e:  # pylint: disable=invalid-name,broad-exception-caught
+    ) as e:
         logger.exception(e)
         req = await _make_request(
             "https://me.rf0x3d.su",
@@ -190,8 +190,8 @@ async def get_process_memory() -> float:
     """
     match platform.system():
         case "Windows":
-            import win32api
-            import win32process
+            import win32api  # pylint: disable=import-error, import-outside-toplevel  # type: ignore
+            import win32process  # pylint: disable=import-error, import-outside-toplevel  # type: ignore
 
             process = win32api.GetCurrentProcess()
             _mem = win32process.GetProcessMemoryInfo(process)
@@ -203,7 +203,7 @@ async def get_process_memory() -> float:
                 mem = 0.0
             return round(mem / (1024**2), 2)
         case "Darwin" | "Linux":
-            import resource
+            import resource  # pylint: disable=import-error, import-outside-toplevel
 
             mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / float(
                 1024 * 1024
