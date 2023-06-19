@@ -55,7 +55,7 @@ async def make_request(  # pylint: disable=too-many-arguments
     Returns:
         ClientResponse | str | dict: Request response
     """
-    if not json_answer and not text_answer and platform.system() == "Linux":
+    if not json_answer and not text_answer and platform in ["linux", "linux2"]:
         logger.warning(
             "Since aiohttp can freeze while getting data "
             "from answer outside opened session, "
@@ -64,9 +64,9 @@ async def make_request(  # pylint: disable=too-many-arguments
         )
     try:
         async with aiohttp.ClientSession(
-            json_serialize=lambda x: orjson.dumps(
+            json_serialize=lambda x: orjson.dumps(  # pylint: disable=no-member
                 x
-            ).decode(),  # pylint: disable=no-member
+            ).decode(),
             raise_for_status=raise_for_status,
         ) as session:
             match method:
@@ -77,7 +77,10 @@ async def make_request(  # pylint: disable=too-many-arguments
                     return (
                         req
                         if not json_answer and not text_answer
-                        else await req.json()
+                        else await req.json(
+                            content_type=None,
+                            loads=orjson.loads,  # pylint: disable=no-member
+                        )
                         if json_answer
                         else await req.text()
                     )
@@ -94,15 +97,18 @@ async def make_request(  # pylint: disable=too-many-arguments
                     return (
                         req
                         if not json_answer and not text_answer
-                        else await req.json()
+                        else await req.json(
+                            content_type=None,
+                            loads=orjson.loads,  # pylint: disable=no-member
+                        )
                         if json_answer
                         else await req.text()
                     )
                 case _:
                     raise ValueError(f"Invalid request method: {method}")
-    except (
+    except (  # pylint: disable=invalid-name,broad-exception-caught
         Exception
-    ) as e:  # pylint: disable=invalid-name,broad-exception-caught
+    ) as e:
         logger.exception(e)
         raise ConnectionError(e) from e
 
