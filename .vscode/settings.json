@@ -10,9 +10,10 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "python.formatting.blackArgs": [
+    "black-formatter.args": [
         "--line-length=79"
     ],
+    "black-formatter.importStrategy": "fromEnvironment",
     "isort.args": [
         "--profile",
         "black",
