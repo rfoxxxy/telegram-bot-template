@@ -7,7 +7,7 @@ authors = ["rf0x3d <yarekfrolov@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 loguru = "^0.6.0"
-aiogram = "^2.23.1"
+aiogram = "^3.0.0"
 aiohttp = { extras = ["speedups"], version = "^3.8.3" }
 charset-normalizer = ">=2.0,<3.0"
 aiodns = "^3.0.0"
@@ -60,6 +60,7 @@ optional = true
 SQLAlchemy = "^2.0.0"
 aiosqlite = "^0.17.0"
 greenlet = "^1.1.2"
+babel = "^2.12.1"
 
 [tool.poetry.group.database]
 optional = true

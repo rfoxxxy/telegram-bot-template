@@ -37,10 +37,13 @@ else:
 
     nest_asyncio.apply()
 
+import orjson
 from aiogram import Bot, Dispatcher
-from aiogram.bot.api import TELEGRAM_PRODUCTION, TelegramAPIServer
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import PRODUCTION, TelegramAPIServer
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
+from redis.asyncio.client import Redis
 
 is_prod = os.environ.get("ENV") == "production" or config.get_item(
     "telegram", "prod"
@@ -64,23 +67,34 @@ bot = Bot(
     config.get_item("telegram", "token")
     if is_prod
     else config.get_item("telegram", "beta_token"),
-    parse_mode="html",  # noqa: e126
-    server=TelegramAPIServer.from_base(
-        config.get_item("features.custom_server", "server")
-    )
-    if is_custom_server
-    else TELEGRAM_PRODUCTION,
+    AiohttpSession(
+        api=TelegramAPIServer.from_base(
+            config.get_item("features.custom_server", "server")
+        )
+        if is_custom_server
+        else PRODUCTION
+    ),
+    "html",
 )
 dp = Dispatcher(
-    bot,
-    storage=RedisStorage2(
-        config.get_item("features.redis", "addr"),
-        config.get_item("features.redis", "port"),
-        password=config.get_item("features.redis", "pass"),
-        prefix=config.get_item("features.redis", "prefix"),
+    storage=RedisStorage(
+        redis=Redis(
+            host=config.get_item("features.redis", "addr"),
+            port=config.get_item("features.redis", "port"),
+            db=0,
+            password=config.get_item("features.redis", "pass"),
+        ),
+        key_builder=DefaultKeyBuilder(
+            prefix=config.get_item("features.redis", "prefix")
+        ),
+        json_dumps=lambda x: orjson.dumps(  # pylint: disable=no-member
+            x
+        ).decode(),
+        json_loads=orjson.loads,  # pylint: disable=no-member
     )
     if config.get_item("features", "use_redis_fsm")
     else MemoryStorage(),
+    name=PROJECT_NAME,
 )
 
 scheduler = None  # pylint: disable=invalid-name
@@ -93,8 +107,6 @@ if config.get_item("features", "use_apscheduler"):
         loop=loop, timezone=config.get_item("features.apscheduler", "timezone")
     )
     scheduler.add_jobstore("sqlalchemy", url="sqlite:///static/jobs.sqlite3")
-
-bot["config"] = config
 
 
 class InterceptHandler(logging.Handler):

@@ -1,6 +1,8 @@
 from aiogram import types
+from aiogram.filters.command import Command
 
-from bot_template import dp
+from bot_template import db, dp
+from bot_template.database.models import User
 from bot_template.keyboards.models import (
     ButtonRow,
     CallbackButton,
@@ -11,13 +13,15 @@ from bot_template.keyboards.models import (
 )
 
 
-@dp.message_handler(commands=["start"])
+@dp.message(Command("start"))
 async def start_handler(message: types.Message):
     return await message.reply("hello, world!")
 
 
-@dp.message_handler(commands=["test"])
-async def test_handler(message: types.Message):
+@dp.message(Command("test"))
+async def test_handler(
+    message: types.Message, session: db.Session, user: User
+):
     keyboard = InlineKeyboard(
         ButtonRow(
             MarkdownViewWebAppButton(
@@ -26,10 +30,14 @@ async def test_handler(message: types.Message):
             )
         ),
         ButtonRow(
-            CallbackButton("test callback", "test_callback"),
+            CallbackButton(
+                "test callback",
+                "test_callback",
+                action="show_username",
+                user=user,
+            ),
             WebAppButton("test webapp", "https://google.com"),
         ),
         ButtonRow(URLPayButton(10000, "USD", "https://google.com")),
     )
-    print(await keyboard.build())
-    return await message.reply("test!", reply_markup=keyboard)
+    return await message.reply("test!", reply_markup=await keyboard.build())

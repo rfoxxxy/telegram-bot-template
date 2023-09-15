@@ -12,7 +12,7 @@ admins = [944176367]
 throttling = 0.5
 
 [core]
-supported_modules = ["filters", "middlewares", "modules"]
+supported_modules = ["middlewares", "modules"]
 
 # some integrations and memes
 [features]

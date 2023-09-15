@@ -1,7 +1,12 @@
 from asyncio import AbstractEventLoop
 from typing import Awaitable
 
-from aiogram import Dispatcher, executor
+from aiogram import Bot, Dispatcher
+from aiogram.webhook.aiohttp_server import (
+    SimpleRequestHandler,
+    setup_application,
+)
+from aiohttp import web
 
 try:
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -23,6 +28,7 @@ class BotCore:
         "project_name",
         "is_prod",
         "dp",
+        "bot",
         "loop",
         "config",
         "webhook",
@@ -34,6 +40,7 @@ class BotCore:
         project_name: str,
         is_prod: bool,
         dp: Dispatcher,  # pylint: disable=invalid-name
+        bot: Bot,
         loop: AbstractEventLoop,
         config: ConfigManager,
         scheduler: "AsyncIOScheduler" = None,
@@ -42,13 +49,11 @@ class BotCore:
         self.project_name = project_name
         self.is_prod = is_prod
         self.dp = dp  # pylint: disable=invalid-name
+        self.bot = bot
         self.loop = loop
         self.config = config
         self.webhook = config.get_item("features", "use_webhook")
         self.task_manager = TaskManager(self.loop, scheduler)
-
-        if self.dp is not None:
-            self.dp.bot["core"] = self
 
     def add_core_task(self, task: BaseCoreTask):
         """Add core task to run. Core tasks running once on startup
@@ -111,7 +116,9 @@ class BotCore:
                 CallbackButtonMiddleware,
             )
 
-            dispatcher.middleware.setup(CallbackButtonMiddleware())
+            dispatcher.callback_query.outer_middleware(
+                CallbackButtonMiddleware()
+            )
 
         ModuleLoader(self.project_name, self.is_prod, self.config).load_all()
 
@@ -136,7 +143,6 @@ class BotCore:
         """
         logger.warning("Closing Redis instance...")
         await dispatcher.storage.close()
-        await dispatcher.storage.wait_closed()
         logger.info("Redis instance closed!")
 
     async def _startup_webhook(self, dispatcher: Dispatcher) -> Awaitable:
@@ -152,15 +158,15 @@ class BotCore:
         skip_updates = self.config.get_item("telegram", "skip_updates")
 
         if skip_updates:
-            await self.dp.bot.delete_webhook(True)
+            await self.bot.delete_webhook(True)
 
         webhook_url = f"{self.config.get_item('features.webhook', 'host')}{self.config.get_item('features.webhook', 'path')}"
-        webhook_info = await self.dp.bot.get_webhook_info()
+        webhook_info = await self.bot.get_webhook_info()
         if (
             webhook_url != webhook_info.url
             or webhook_info.max_connections != 100
         ):
-            await self.dp.bot.set_webhook(
+            await self.bot.set_webhook(
                 webhook_url,
                 max_connections=100,
                 drop_pending_updates=skip_updates,
@@ -177,9 +183,9 @@ class BotCore:
             Awaitable: main startup logic
         """
 
-        webhook_info = await self.dp.bot.get_webhook_info()
+        webhook_info = await self.bot.get_webhook_info()
         if webhook_info.url:
-            await self.dp.bot.delete_webhook(
+            await self.bot.delete_webhook(
                 self.config.get_item("telegram", "skip_updates")
             )
         return await self._startup(dispatcher)
@@ -188,20 +194,20 @@ class BotCore:
         """Start bot"""
         logger.info(f"Starting {self.project_name}...")
         if self.webhook:
-            executor.start_webhook(
-                self.dp,
-                webhook_path=self.config.get_item("features.webhook", "path"),
+            self.dp.startup.register(self._startup_webhook)
+            self.dp.shutdown.register(self._shutdown)
+            app = web.Application()
+            webhook_requests_handler = SimpleRequestHandler(self.dp, self.bot)
+            webhook_requests_handler.register(
+                app, path=self.config.get_item("features.webhook", "path")
+            )
+            setup_application(app, self.dp, bot=self.bot)
+            web.run_app(
+                app=app,
                 host=self.config.get_item("features.webhook", "webapp_host"),
                 port=self.config.get_item("features.webhook", "webapp_port"),
-                loop=self.loop,
-                on_startup=self._startup_webhook,
-                on_shutdown=self._shutdown,
             )
         else:
-            executor.start_polling(
-                self.dp,
-                skip_updates=self.config.get_item("telegram", "skip_updates"),
-                loop=self.loop,
-                on_startup=self._startup_polling,
-                on_shutdown=self._shutdown,
-            )
+            self.dp.startup.register(self._startup_polling)
+            self.dp.shutdown.register(self._shutdown)
+            self.loop.run_until_complete(self.dp.start_polling(self.bot))
