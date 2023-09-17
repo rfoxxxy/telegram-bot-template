@@ -12,12 +12,13 @@ admins = [944176367]
 throttling = 0.5
 
 [core]
-supported_modules = ["filters", "middlewares", "modules"]
+supported_modules = ["middlewares", "modules"]
 
 # some integrations and memes
 [features]
 use_webhook = false
 use_custom_server = false
+use_sulguk = false          # group: sulguk-parsemode
 use_database = false        # group: database
 use_uvloop = false          # group: uvloop
 use_sentry = false          # group: sentry

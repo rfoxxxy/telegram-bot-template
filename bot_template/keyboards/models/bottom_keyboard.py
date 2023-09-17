@@ -2,6 +2,7 @@ import asyncio
 from typing import List
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from bot_template.keyboards.exceptions import UnsupportedTypeError
 from bot_template.keyboards.models.base import BaseKeyboardButton, ButtonRow
@@ -20,7 +21,7 @@ class TextButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text)
+        return KeyboardButton(text=self.text)
 
 
 class RequestContactButton(BaseKeyboardButton):
@@ -34,7 +35,7 @@ class RequestContactButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_contact=True)
+        return KeyboardButton(text=self.text, request_contact=True)
 
 
 class RequestLocationButton(BaseKeyboardButton):
@@ -48,7 +49,7 @@ class RequestLocationButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_location=True)
+        return KeyboardButton(text=self.text, request_location=True)
 
 
 class RequestPollButton(BaseKeyboardButton):
@@ -62,7 +63,7 @@ class RequestPollButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_contact=True)
+        return KeyboardButton(text=self.text, request_contact=True)
 
 
 class BottomKeyboard(KeyboardMarkupMixin):
@@ -86,18 +87,18 @@ class BottomKeyboard(KeyboardMarkupMixin):
         Returns:
             ReplyKeyboardMarkup: aiogram keyboard markup object
         """
-        keyboard = ReplyKeyboardMarkup(
-            resize_keyboard=resize,
-            one_time_keyboard=one_time,
-            input_field_placeholder=placeholder,
-            selective=selective,
-        )
+        keyboard = ReplyKeyboardBuilder()
         for row in self.rows:
             buttons = await asyncio.gather(
                 *[btn.build_button(self) for btn in row.buttons]
             )
             keyboard.row(*buttons)
-        return keyboard
+        return keyboard.as_markup(
+            resize_keyboard=resize,
+            one_time_keyboard=one_time,
+            input_field_placeholder=placeholder,
+            selective=selective,
+        )
 
     def _build(self) -> ReplyKeyboardMarkup:
         """

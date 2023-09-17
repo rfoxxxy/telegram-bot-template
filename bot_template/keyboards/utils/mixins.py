@@ -1,6 +1,6 @@
 class KeyboardMarkupMixin:
-    def to_python(self) -> dict:
-        return self._build().to_python()
+    """def to_python(self) -> dict:
+    return self._build().to_python()"""
 
     async def row(self, row: "ButtonRow") -> None:  # type: ignore
         self.rows.append(row)

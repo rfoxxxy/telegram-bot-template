@@ -17,9 +17,9 @@ not so slight, but really fast
 project is being developed for personal use, so any suggestions aren't accepted if they're not necessary. by the way - you can add what you need to your fork.
 
 ## installing:
-you can install only packages that you need, but also you can install a whole project (~72 packages):
+you can install only packages that you need, but also you can install a whole project (~80 packages):
 ```sh
-poetry install --with dev,uvloop,sentry,redis,keyboards,database,scheduler
+poetry install --with dev,uvloop,sentry,redis,keyboards,database,scheduler,sulguk-parsemode
 ```
 
 ### optional packages:
@@ -30,4 +30,5 @@ poetry install --with dev,uvloop,sentry,redis,keyboards,database,scheduler
 * keyboards - dependency for use_modern_callback flag
 * database - dependency for use_database flag
 * scheduler - dependency for use_apscheduler flag
+* sulguk-parsemode - dependency for use_sulguk flag. [sulguk](https://github.com/Tishka17/sulguk) is a html to telegram entities converter
 * windows - dependencies for windows platform
