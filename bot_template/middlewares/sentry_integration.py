@@ -15,31 +15,21 @@ class SentryContextMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        if (
-            (not event.message)
-            and (not event.callback_query)
-            and (not event.inline_query)
-            and (not event.my_chat_member)
-            and (not event.chosen_inline_result)
-        ):
-            return
-
-        from_user = (
-            event.message
-            or event.callback_query
-            or event.inline_query
-            or event.my_chat_member
-            or event.chosen_inline_result
-        ).from_user
-
-        sentry_sdk.set_user(
-            {
-                "name": from_user.full_name,
-                "id": from_user.id,
-                "username": from_user.username,
-                "update": event.model_dump_json(),
-            }
-        )
+        # TODO: my_chat_member
+        if type(event).__name__ in [
+            "Message",
+            "CallbackQuery",
+            "InlineQuery",
+            "ChosenInlineResult",
+        ]:
+            sentry_sdk.set_user(
+                {
+                    "name": event.from_user.full_name,
+                    "id": event.from_user.id,
+                    "username": event.from_user.username,
+                    "update": event.model_dump_json(),
+                }
+            )
         return await handler(event, data)
 
 
