@@ -74,7 +74,9 @@ bot = Bot(
         if is_custom_server
         else PRODUCTION
     ),
-    "html",
+    parse_mode="sulguk"
+    if config.get_item("features", "use_sulguk")
+    else "html",
 )
 dp = Dispatcher(
     storage=RedisStorage(

@@ -85,6 +85,12 @@ optional = true
 [tool.poetry.group.windows.dependencies]
 pywin32 = "^306"
 
+[tool.poetry.group.sulguk-parsemode]
+optional = true
+
+[tool.poetry.group.sulguk-parsemode.dependencies]
+sulguk = "^0.5.0"
+
 [build-system]
 requires = ["poetry-core>=1.4.0"]
 build-backend = "poetry.core.masonry.api"

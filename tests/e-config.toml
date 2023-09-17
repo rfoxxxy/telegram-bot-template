@@ -15,6 +15,7 @@ supported_modules = ["middlewares", "modules"]
 [features]
 use_webhook = false
 use_custom_server = true
+use_sulguk = false
 use_database = false
 use_uvloop = false
 use_sentry = false

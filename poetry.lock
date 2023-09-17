@@ -2150,6 +2150,17 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "sulguk"
+version = "0.5.0"
+description = "Converter HTML to Telegram Entities"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "sulguk-0.5.0-py3-none-any.whl", hash = "sha256:49f7c26760eb824e8e642618de8e4241779c3cb8ad225d29644e421829488edc"},
+    {file = "sulguk-0.5.0.tar.gz", hash = "sha256:5f742c72a2b16e591b852d199841445cc7e84f922c79c229c0f142d2c65c64f6"},
+]
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -2492,4 +2503,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9d1c7fbabc8dbb74f505a14bf1e49acfde2fefca6a2b0fc116562d1d93acfe20"
+content-hash = "327bb795476a93aab50d67ed01307722dce5e32899a31ecfe676611680c1270a"

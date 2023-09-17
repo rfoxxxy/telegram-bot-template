@@ -119,6 +119,12 @@ class BotCore:
             dispatcher.callback_query.outer_middleware(
                 CallbackButtonMiddleware()
             )
+        if self.config.get_item("features", "use_sulguk"):
+            from sulguk import (  # pylint: disable=import-outside-toplevel
+                AiogramSulgukMiddleware,
+            )
+
+            self.bot.session.middleware(AiogramSulgukMiddleware())
 
         ModuleLoader(self.project_name, self.is_prod, self.config).load_all()
 

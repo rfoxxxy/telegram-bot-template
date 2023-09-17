@@ -18,6 +18,7 @@ supported_modules = ["middlewares", "modules"]
 [features]
 use_webhook = false
 use_custom_server = false
+use_sulguk = false          # group: sulguk-parsemode
 use_database = false        # group: database
 use_uvloop = false          # group: uvloop
 use_sentry = false          # group: sentry
