@@ -10,12 +10,6 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
-      - id: autoflake
-        name: autoflake
-        entry: autoflake
-        language: system
-        types: [python]
-        args: [--in-place, --remove-all-unused-imports, --remove-duplicate-keys]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0

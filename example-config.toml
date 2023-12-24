@@ -52,6 +52,14 @@ addr = "localhost"
 port = 5432
 database_name = ""
 
+[features.modern_callback]
+driver = "sqlite+aiosqlite"
+# username = ""
+# password = ""
+# addr = ""
+# port = 1010
+database_name = "static/callbacks.sqlite3"
+
 # sentry configuration (works only if use_sentry feature enabled)
 [features.sentry]
 public_key = ""

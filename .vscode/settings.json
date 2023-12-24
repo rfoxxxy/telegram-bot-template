@@ -4,7 +4,7 @@
     },
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.formatOnSaveMode": "file",
     "editor.formatOnPaste": true,
     "editor.codeActionsOnSave": {
