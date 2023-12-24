@@ -221,10 +221,14 @@ class InlineKeyboard(KeyboardMarkupMixin):
             InlineKeyboardMarkup: aiogram keyboard markup object
         """
         keyboard = InlineKeyboardMarkup()
-        for row in self.rows:
-            buttons = await asyncio.gather(
-                *[btn.build_button(self) for btn in row.buttons]
-            )
+        rows = [
+            asyncio.gather(*[btn.build_button(self) for btn in row.buttons])
+            for row in self.rows
+        ]
+
+        buttons_in_rows = await asyncio.gather(*rows)
+
+        for buttons in buttons_in_rows:
             keyboard.row(*buttons)
         return keyboard
 

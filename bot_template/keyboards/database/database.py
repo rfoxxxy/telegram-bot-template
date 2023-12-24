@@ -43,8 +43,20 @@ if Base:
     if config.get_item("features", "use_modern_callback"):
         db = create_async_engine(
             sqlalchemy.engine.URL.create(
-                drivername="sqlite+aiosqlite",
-                database="static/callbacks.sqlite3",
+                drivername=config.get_item(
+                    "features.modern_callback", "driver"
+                ),
+                username=config.get_item(
+                    "features.modern_callback", "username"
+                ),
+                password=config.get_item(
+                    "features.modern_callback", "password"
+                ),
+                host=config.get_item("features.modern_callback", "addr"),
+                port=config.get_item("features.modern_callback", "port"),
+                database=config.get_item(
+                    "features.modern_callback", "database_name"
+                ),
             ),
             future=True,
         )  # noqa: e126

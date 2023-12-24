@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "telegram-bot-template"
+name = "bot-template"
 version = "2.0.0"
 description = "An ultimate, convenient and fast way to start developing a bot in a matter of seconds without copying code from other projects."
 authors = ["rf0x3d <yarekfrolov@gmail.com>"]
@@ -29,7 +29,6 @@ black = "^23.3.0"
 pre-commit = "^3.3.1"
 pytest = "^7.2.0"
 pytest-mock = "^3.10.0"
-autoflake = "^2.0.0"
 pylint = "^2.15.9"
 pytest-asyncio = "^0.20.3"
 pytest-cov = "^4.0.0"
@@ -66,7 +65,7 @@ optional = true
 
 [tool.poetry.group.database.dependencies]
 SQLAlchemy = "^2.0.0"
-asyncpg = "^0.25.0"
+asyncpg = "^0.29.0"
 greenlet = "^1.1.2"
 alembic = "^1.10.2"
 psycopg = { extras = ["binary", "pool"], version = "^3.1.8" }
