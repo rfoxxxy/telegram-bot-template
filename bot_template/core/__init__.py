@@ -115,6 +115,15 @@ class BotCore:
 
         ModuleLoader(self.project_name, self.is_prod, self.config).load_all()
 
+        try:
+            from bot_template.keyboards.loader import (  # pylint: disable=import-outside-toplevel
+                auto_register_buttons,
+            )
+
+            auto_register_buttons()
+        except ImportError:
+            pass
+
         if self.config.get_item("features", "use_database"):
             from bot_template import (  # pylint: disable=import-outside-toplevel
                 db,

@@ -13,7 +13,7 @@ class TextButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
 
     def __init__(self, text: str):
-        super().__init__("text", text)
+        super().__init__("TextButton", text)
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "InlineKeyboard":
@@ -22,12 +22,16 @@ class TextButton(BaseKeyboardButton):
             )
         return KeyboardButton(self.text)
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
+
 
 class RequestContactButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
 
     def __init__(self, text: str):
-        super().__init__("contact", text)
+        super().__init__("RequestContactButton", text)
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "InlineKeyboard":
@@ -36,12 +40,16 @@ class RequestContactButton(BaseKeyboardButton):
             )
         return KeyboardButton(self.text, request_contact=True)
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
+
 
 class RequestLocationButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
 
     def __init__(self, text: str):
-        super().__init__("location", text)
+        super().__init__("RequestLocationButton", text)
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "InlineKeyboard":
@@ -50,12 +58,16 @@ class RequestLocationButton(BaseKeyboardButton):
             )
         return KeyboardButton(self.text, request_location=True)
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
+
 
 class RequestPollButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
 
     def __init__(self, text: str, poll_type: str):
-        super().__init__("poll", text, poll_type=poll_type)
+        super().__init__("RequestPollButton", text, poll_type=poll_type)
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "InlineKeyboard":
@@ -63,6 +75,10 @@ class RequestPollButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return KeyboardButton(self.text, request_contact=True)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
 
 
 class BottomKeyboard(KeyboardMarkupMixin):
