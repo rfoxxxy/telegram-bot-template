@@ -9,6 +9,7 @@ from string import ascii_letters
 from typing import Optional, Union
 
 from loguru import logger
+from sqlalchemy import NullPool
 
 try:
     import sqlalchemy
@@ -59,6 +60,7 @@ if Base:
                 ),
             ),
             future=True,
+            poolclass=NullPool,
         )  # noqa: e126
 
         Session: AsyncSession = sessionmaker(

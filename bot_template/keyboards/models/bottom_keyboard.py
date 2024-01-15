@@ -1,7 +1,11 @@
 import asyncio
 from typing import List
 
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import (
+    KeyboardButton,
+    KeyboardButtonPollType,
+    ReplyKeyboardMarkup,
+)
 
 from bot_template.keyboards.exceptions import UnsupportedTypeError
 from bot_template.keyboards.models.base import BaseKeyboardButton, ButtonRow
@@ -74,11 +78,13 @@ class RequestPollButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_contact=True)
+        return KeyboardButton(
+            self.text, request_poll=KeyboardButtonPollType(self.poll_type)
+        )
 
     @classmethod
     def deserialize(cls, data: dict):
-        return cls(text=data["text"])
+        return cls(text=data["text"], poll_type=data["poll_type"])
 
 
 class BottomKeyboard(KeyboardMarkupMixin):
