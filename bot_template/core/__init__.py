@@ -1,5 +1,6 @@
+import asyncio
 from asyncio import AbstractEventLoop
-from typing import Awaitable
+from typing import Awaitable, List
 
 from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import (
@@ -28,11 +29,12 @@ class BotCore:
         "project_name",
         "is_prod",
         "dp",
-        "bot",
+        "bots",
         "loop",
         "config",
         "webhook",
         "task_manager",
+        "webhook_paths",
     ]
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -40,7 +42,7 @@ class BotCore:
         project_name: str,
         is_prod: bool,
         dp: Dispatcher,  # pylint: disable=invalid-name
-        bot: Bot,
+        bot: List[Bot] | Bot,
         loop: AbstractEventLoop,
         config: ConfigManager,
         scheduler: "AsyncIOScheduler" = None,
@@ -49,11 +51,18 @@ class BotCore:
         self.project_name = project_name
         self.is_prod = is_prod
         self.dp = dp  # pylint: disable=invalid-name
-        self.bot = bot
+        self.bots = [bot] if not isinstance(bot, list) else bot
         self.loop = loop
         self.config = config
         self.webhook = config.get_item("features", "use_webhook")
         self.task_manager = TaskManager(self.loop, scheduler)
+        self.webhook_paths = self.config.get_item("telegram", "bots")
+        self.webhook_paths = [
+            _bot.get("webhook_path") for _bot in self.webhook_paths
+        ]
+
+        if self.dp is not None:
+            self.dp["core"] = self
 
     def add_core_task(self, task: BaseCoreTask):
         """Add core task to run. Core tasks running once on startup
@@ -124,9 +133,19 @@ class BotCore:
                 AiogramSulgukMiddleware,
             )
 
-            self.bot.session.middleware(AiogramSulgukMiddleware())
+            for bot in self.bots:
+                bot.session.middleware(AiogramSulgukMiddleware())
 
         ModuleLoader(self.project_name, self.is_prod, self.config).load_all()
+
+        try:
+            from bot_template.keyboards.models.base import (  # pylint: disable=import-outside-toplevel
+                ButtonRegistry,
+            )
+
+            ButtonRegistry.register_buttons()
+        except ImportError as e:
+            logger.exception(e)
 
         if self.config.get_item("features", "use_database"):
             from bot_template import (  # pylint: disable=import-outside-toplevel
@@ -163,20 +182,30 @@ class BotCore:
 
         skip_updates = self.config.get_item("telegram", "skip_updates")
 
-        if skip_updates:
-            await self.bot.delete_webhook(True)
+        async def set_bot_settings(bot: Bot, webhook_path: str):
+            if skip_updates:
+                await bot.delete_webhook(True)
 
-        webhook_url = f"{self.config.get_item('features.webhook', 'host')}{self.config.get_item('features.webhook', 'path')}"
-        webhook_info = await self.bot.get_webhook_info()
-        if (
-            webhook_url != webhook_info.url
-            or webhook_info.max_connections != 100
-        ):
-            await self.bot.set_webhook(
-                webhook_url,
-                max_connections=100,
-                drop_pending_updates=skip_updates,
-            )
+            webhook_url = f"{self.config.get_item('features.webhook', 'host')}{webhook_path}"
+            webhook_info = await bot.get_webhook_info()
+            # print(webhook_info)
+            if (
+                webhook_url != webhook_info.url
+                or webhook_info.max_connections != 100
+            ):
+                await bot.set_webhook(
+                    webhook_url,
+                    max_connections=100,
+                    drop_pending_updates=skip_updates,
+                )
+
+        await asyncio.gather(
+            *[
+                set_bot_settings(bot, self.webhook_paths[index])
+                for index, bot in enumerate(self.bots)
+            ]
+        )
+
         return await self._startup(dispatcher)
 
     async def _startup_polling(self, dispatcher: Dispatcher) -> Awaitable:
@@ -189,11 +218,19 @@ class BotCore:
             Awaitable: main startup logic
         """
 
-        webhook_info = await self.bot.get_webhook_info()
-        if webhook_info.url:
-            await self.bot.delete_webhook(
-                self.config.get_item("telegram", "skip_updates")
-            )
+        skip_updates = self.config.get_item("telegram", "skip_updates")
+
+        async def set_bot_settings(bot: Bot):
+            # print(await bot.me())
+            webhook_info = await bot.get_webhook_info()
+
+            if webhook_info.url or skip_updates:
+                await bot.delete_webhook(
+                    self.config.get_item("telegram", "skip_updates")
+                )
+
+        await asyncio.gather(*[set_bot_settings(bot) for bot in self.bots])
+
         return await self._startup(dispatcher)
 
     def start(self):
@@ -203,11 +240,12 @@ class BotCore:
             self.dp.startup.register(self._startup_webhook)
             self.dp.shutdown.register(self._shutdown)
             app = web.Application()
-            webhook_requests_handler = SimpleRequestHandler(self.dp, self.bot)
-            webhook_requests_handler.register(
-                app, path=self.config.get_item("features.webhook", "path")
-            )
-            setup_application(app, self.dp, bot=self.bot)
+            for index, bot in enumerate(self.bots):
+                webhook_requests_handler = SimpleRequestHandler(self.dp, bot)
+                webhook_requests_handler.register(
+                    app, path=self.webhook_paths[index]
+                )
+                setup_application(app, self.dp, bot=bot)
             web.run_app(
                 app=app,
                 host=self.config.get_item("features.webhook", "webapp_host"),
@@ -216,4 +254,4 @@ class BotCore:
         else:
             self.dp.startup.register(self._startup_polling)
             self.dp.shutdown.register(self._shutdown)
-            self.loop.run_until_complete(self.dp.start_polling(self.bot))
+            self.loop.run_until_complete(self.dp.start_polling(*self.bots))

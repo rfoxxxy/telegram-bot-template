@@ -63,21 +63,23 @@ try:
 except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-bot = Bot(
-    config.get_item("telegram", "token")
-    if is_prod
-    else config.get_item("telegram", "beta_token"),
-    AiohttpSession(
-        api=TelegramAPIServer.from_base(
-            config.get_item("features.custom_server", "server")
-        )
-        if is_custom_server
-        else PRODUCTION
-    ),
-    parse_mode="sulguk"
-    if config.get_item("features", "use_sulguk")
-    else "html",
-)
+_bots = config.get_item("telegram", "bots")
+bots = [
+    Bot(
+        bot["token"] if is_prod else bot["beta_token"],
+        AiohttpSession(
+            api=TelegramAPIServer.from_base(
+                config.get_item("features.custom_server", "server")
+            )
+            if is_custom_server
+            else PRODUCTION
+        ),
+        parse_mode="sulguk"
+        if config.get_item("features", "use_sulguk")
+        else "html",
+    )
+    for bot in _bots
+]
 dp = Dispatcher(
     storage=RedisStorage(
         redis=Redis(

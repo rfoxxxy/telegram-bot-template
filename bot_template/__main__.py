@@ -2,7 +2,7 @@ from loguru import logger
 
 from bot_template import (
     PROJECT_NAME,
-    bot,
+    bots,
     config,
     dp,
     features,
@@ -23,6 +23,6 @@ if is_custom_server:
         f"Using custom BotAPI server: {config.get_item('features.custom_server', 'server')}"
     )
 
-core = BotCore(PROJECT_NAME, is_prod, dp, bot, loop, config, scheduler)
+core = BotCore(PROJECT_NAME, is_prod, dp, bots, loop, config, scheduler)
 
 core.start()

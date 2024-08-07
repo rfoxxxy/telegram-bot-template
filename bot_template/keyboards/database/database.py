@@ -9,6 +9,7 @@ from string import ascii_letters
 from typing import Optional, Union
 
 from loguru import logger
+from sqlalchemy import NullPool
 
 try:
     import sqlalchemy
@@ -59,6 +60,10 @@ if Base:
                 ),
             ),
             future=True,
+            pool=NullPool
+            if config.get_item("features.modern_callback", "driver")
+            != "sqlite+aiosqlite"
+            else None,
         )  # noqa: e126
 
         Session: AsyncSession = sessionmaker(

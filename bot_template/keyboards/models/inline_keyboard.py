@@ -7,7 +7,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     SwitchInlineQueryChosenChat,
 )
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from babel.core import Locale
 
 try:
@@ -28,7 +27,7 @@ class CallbackButton(BaseKeyboardButton):
 
     def __init__(self, text: str, callback_data: str, **kwargs):
         super().__init__(
-            "callback", text, callback_data, additional_data=kwargs
+            "CallbackButton", text, callback_data, additional_data=kwargs
         )
 
     async def __encode_data(self, data: str, additional_data: dict) -> str:
@@ -53,13 +52,21 @@ class CallbackButton(BaseKeyboardButton):
             ),
         )
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            callback_data=data["callback_data"],
+            **data["additional_data"],
+        )
+
 
 class SwitchInlineButton(BaseKeyboardButton):
     """Inline keyboard button object"""
 
     def __init__(self, text: str, switch_inline_query: str):
         super().__init__(
-            "switch_inline_query",
+            "SwitchInlineButton",
             text,
             switch_inline_query=switch_inline_query,
         )
@@ -73,13 +80,20 @@ class SwitchInlineButton(BaseKeyboardButton):
             text=self.text, switch_inline_query=self.switch_inline_query
         )
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            switch_inline_query=data["switch_inline_query"],
+        )
+
 
 class SwitchInlineCurrentChatButton(BaseKeyboardButton):
     """Inline keyboard button object"""
 
     def __init__(self, text: str, switch_inline_query: str):
         super().__init__(
-            "switch_inline_query_current_chat",
+            "SwitchInlineCurrentChatButton",
             text,
             switch_inline_query=switch_inline_query,
         )
@@ -92,6 +106,13 @@ class SwitchInlineCurrentChatButton(BaseKeyboardButton):
         return InlineKeyboardButton(
             text=self.text,
             switch_inline_query_current_chat=self.switch_inline_query,
+        )
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            switch_inline_query=data["switch_inline_query"],
         )
 
 
@@ -112,7 +133,7 @@ class SwitchInlineChosenChatButton(BaseKeyboardButton):
         self.allow_group_chats = allow_group_chats
         self.allow_channel_chats = allow_channel_chats
         super().__init__(
-            "switch_inline_query_chosen_chat",
+            "SwitchInlineChosenChatButton",
             text,
             switch_inline_query=switch_inline_query,
         )
@@ -133,12 +154,36 @@ class SwitchInlineChosenChatButton(BaseKeyboardButton):
             ),
         )
 
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "text": self.text,
+            "switch_inline_query": self.switch_inline_query,
+            "allow_user_chats": self.allow_user_chats,
+            "allow_bot_chats": self.allow_bot_chats,
+            "allow_group_chats": self.allow_group_chats,
+            "allow_channel_chats": self.allow_channel_chats,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            switch_inline_query=data["switch_inline_query"],
+            allow_user_chats=data["allow_user_chats"],
+            allow_bot_chats=data["allow_bot_chats"],
+            allow_group_chats=data["allow_group_chats"],
+            allow_channel_chats=data["allow_channel_chats"],
+        )
+
 
 class UserProfileButton(BaseKeyboardButton):
     """Inline keyboard button object"""
 
     def __init__(self, text: str, user_id: int):
-        super().__init__("url", text, url=f"tg://user?id={user_id}")
+        super().__init__(
+            "UserProfileButton", text, url=f"tg://user?id={user_id}"
+        )
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "BottomKeyboard":
@@ -147,16 +192,26 @@ class UserProfileButton(BaseKeyboardButton):
             )
         return InlineKeyboardButton(text=self.text, url=self.url)
 
+    def serialize(self) -> dict:
+        return {"type": self.type, "text": self.text, "user_id": self.user_id}
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"], user_id=data["user_id"])
+
 
 class PayButton(BaseKeyboardButton):
     """Inline keyboard button object"""
 
     def __init__(self, price: float, val: str, locale: str | Locale = None):
-        if not locale:
-            locale = "en"
+        self.price = price
+        self.val = val
+        self.locale = locale
+        if not self.locale:
+            self.locale = "en"
         super().__init__(
-            "payment",
-            f"{get_pay_text(str(locale))} {babel.numbers.format_currency(price, val, locale=locale)}",
+            "PayButton",
+            f"{get_pay_text(str(locale))} {babel.numbers.format_currency(self.price, self.val, locale=self.locale)}",
         )
 
     async def build_button(self, ctx):
@@ -166,12 +221,24 @@ class PayButton(BaseKeyboardButton):
             )
         return InlineKeyboardButton(text=self.text, pay=True)
 
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(price=data["price"], val=data["val"], locale=data["locale"])
+
 
 class URLButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
 
     def __init__(self, text: str, url: str):
-        super().__init__("url", text, url=url)
+        super().__init__("URLButton", text, url=url)
 
     async def build_button(self, ctx):
         if type(ctx).__name__ == "BottomKeyboard":
@@ -180,6 +247,13 @@ class URLButton(BaseKeyboardButton):
             )
         return InlineKeyboardButton(text=self.text, url=self.url)
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            url=data["url"],
+        )
+
 
 class URLPayButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
@@ -187,11 +261,14 @@ class URLPayButton(BaseKeyboardButton):
     def __init__(
         self, price: float, val: str, url: str, locale: str | Locale = None
     ):
-        if not locale:
-            locale = "en"
+        self.price = price
+        self.val = val
+        self.locale = locale
+        if not self.locale:
+            self.locale = "en"
         super().__init__(
-            "url",
-            f"{get_pay_text(str(locale))} {babel.numbers.format_currency(price, val, locale=locale)}",
+            "URLPayButton",
+            f"{get_pay_text(str(locale))} {babel.numbers.format_currency(self.price, self.val, locale=self.locale)}",
             url=url,
         )
 
@@ -201,6 +278,24 @@ class URLPayButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(text=self.text, url=self.url)
+
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "url": self.url,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            url=data["url"],
+            price=data["price"],
+            val=data["val"],
+            locale=data["locale"],
+        )
 
 
 class InlineKeyboard(KeyboardMarkupMixin):
@@ -218,7 +313,6 @@ class InlineKeyboard(KeyboardMarkupMixin):
         Returns:
             InlineKeyboardMarkup: aiogram keyboard markup object
         """
-        keyboard = InlineKeyboardBuilder()
         rows = [
             asyncio.gather(*[btn.build_button(self) for btn in row.buttons])
             for row in self.rows
@@ -226,9 +320,9 @@ class InlineKeyboard(KeyboardMarkupMixin):
 
         buttons_in_rows = await asyncio.gather(*rows)
 
-        for buttons in buttons_in_rows:
-            keyboard.row(*buttons)
-        return keyboard.as_markup()
+        keyboard = InlineKeyboardMarkup(inline_keyboard=buttons_in_rows)
+
+        return keyboard
 
     def _build(self) -> InlineKeyboardMarkup:
         """

@@ -3,16 +3,19 @@
 
 [telegram]
 prod = false
-skip_updates = false
+skip_updates = true
+
+[[telegram.bots]]
 token = ""
 beta_token = "444:TEST"
+webhook_path = "/bot2/webhook"
 
 [bot]
 admins = [944176367]
 throttling = 0.5
 
 [core]
-supported_modules = ["middlewares", "modules"]
+supported_modules = ["filters", "middlewares", "modules"]
 
 # some integrations and memes
 [features]
@@ -32,7 +35,6 @@ server = 'https://api.telegram.org/'
 
 [features.webhook]
 host = "https://bot_template.neonteam.cc"
-path = "/bot/webhook"
 webapp_host = "0.0.0.0"
 webapp_port = 3939
 

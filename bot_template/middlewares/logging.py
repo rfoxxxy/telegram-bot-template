@@ -25,6 +25,7 @@ class LogMiddleware(BaseMiddleware):
         event: CallbackQuery | ChosenInlineResult | InlineQuery | Message,
         data: Dict[str, Any],
     ) -> Any:
+        # print(event.model_dump_json())
         match type(event).__name__:
             case "Message":
                 logger.info(

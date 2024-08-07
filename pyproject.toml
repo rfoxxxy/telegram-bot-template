@@ -50,8 +50,7 @@ sentry-sdk = "^1.5.12"
 optional = true
 
 [tool.poetry.group.redis.dependencies]
-aioredis = "^2.0.0"
-redis = "^4.5.4"
+redis = {extras = ["hiredis"], version = "^5.0.1"}
 
 [tool.poetry.group.keyboards]
 optional = true

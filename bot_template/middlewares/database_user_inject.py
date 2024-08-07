@@ -9,7 +9,7 @@ from aiogram.types import (
     Message,
 )
 
-from bot_template import db, dp
+from bot_template import dp
 from bot_template.database import database
 from bot_template.database.exceptions import NotFoundError
 
@@ -39,22 +39,7 @@ class UserInjectorMiddleware(BaseMiddleware):
                 await data["session"].commit()
             except NotFoundError:
                 user = await database.register_user(event, data["session"])
-        else:
-            async with db.Session() as session:  # type: ignore
-                try:
-                    user = await database.get_user(
-                        event.from_user.id, session  # type: ignore
-                    )
-                    if user.username != event.from_user.username:  # type: ignore
-                        user.username = event.from_user.username  # type: ignore
-                    if user.name != html.escape(
-                        event.from_user.full_name  # type: ignore
-                    ):
-                        user.name = html.escape(event.from_user.full_name)  # type: ignore
-                    await session.commit()
-                except NotFoundError:
-                    user = await database.register_user(event, session)
-        data["user"] = user
+            data["user"] = user
         return await handler(event, data)
 
 

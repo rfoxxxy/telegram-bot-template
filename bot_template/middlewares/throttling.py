@@ -17,7 +17,7 @@ class ThrottlingMiddleware(BaseMiddleware):
     ) -> Any:
         match type(event).__name__:
             case "Message":
-                if (event.text or event.caption).startswith("/"):  # type: ignore
+                if (event.text or event.caption) and (event.text or event.caption).startswith("/"):  # type: ignore
                     if not cache.get(event.from_user.id):  # type: ignore
                         cache[event.from_user.id] = True  # type: ignore
                     else:
@@ -30,7 +30,8 @@ class ThrottlingMiddleware(BaseMiddleware):
                     cache[event.from_user.id] = True  # type: ignore
                 else:
                     await event.answer(
-                        "Тише-тише! Попробуй снова через 1 сек.", True
+                        "Тише-тише! Попробуй снова через 1 сек.",
+                        show_alert=True,
                     )
                     return
         return await handler(event, data)
