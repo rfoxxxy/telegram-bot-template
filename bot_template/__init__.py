@@ -39,6 +39,7 @@ else:
 
 import orjson
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import PRODUCTION, TelegramAPIServer
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -74,9 +75,11 @@ bots = [
             if is_custom_server
             else PRODUCTION
         ),
-        parse_mode="sulguk"
-        if config.get_item("features", "use_sulguk")
-        else "html",
+        default=DefaultBotProperties(
+            parse_mode="sulguk"
+            if config.get_item("features", "use_sulguk")
+            else "html"
+        ),
     )
     for bot in _bots
 ]

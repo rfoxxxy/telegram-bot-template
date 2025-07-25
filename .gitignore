@@ -149,3 +149,5 @@ jobs.sqlite3
 config.*
 
 _test.py
+
+*.log.zip

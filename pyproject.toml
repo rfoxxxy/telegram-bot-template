@@ -38,7 +38,7 @@ pytest-cov = "^4.0.0"
 optional = true
 
 [tool.poetry.group.uvloop.dependencies]
-uvloop = "^0.16.0"
+uvloop = "^0.19.0"
 
 [tool.poetry.group.sentry]
 optional = true
