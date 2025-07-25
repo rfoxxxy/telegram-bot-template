@@ -30,6 +30,10 @@ class TextButton(BaseKeyboardButton):
     def deserialize(cls, data: dict):
         return cls(text=data["text"])
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
+
 
 class RequestContactButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
@@ -48,6 +52,10 @@ class RequestContactButton(BaseKeyboardButton):
     def deserialize(cls, data: dict):
         return cls(text=data["text"])
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
+
 
 class RequestLocationButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
@@ -61,6 +69,10 @@ class RequestLocationButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return KeyboardButton(text=self.text, request_location=True)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
 
     @classmethod
     def deserialize(cls, data: dict):

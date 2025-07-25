@@ -87,6 +87,13 @@ class SwitchInlineButton(BaseKeyboardButton):
             switch_inline_query=data["switch_inline_query"],
         )
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            switch_inline_query=data["switch_inline_query"],
+        )
+
 
 class SwitchInlineCurrentChatButton(BaseKeyboardButton):
     """Inline keyboard button object"""
@@ -199,6 +206,18 @@ class UserProfileButton(BaseKeyboardButton):
     def deserialize(cls, data: dict):
         return cls(text=data["text"], user_id=data["user_id"])
 
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(price=data["price"], val=data["val"], locale=data["locale"])
+
 
 class PayButton(BaseKeyboardButton):
     """Inline keyboard button object"""
@@ -254,6 +273,13 @@ class URLButton(BaseKeyboardButton):
             url=data["url"],
         )
 
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            url=data["url"],
+        )
+
 
 class URLPayButton(BaseKeyboardButton):
     """Bottom keyboard button object"""
@@ -278,6 +304,24 @@ class URLPayButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(text=self.text, url=self.url)
+
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "url": self.url,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            url=data["url"],
+            price=data["price"],
+            val=data["val"],
+            locale=data["locale"],
+        )
 
     def serialize(self) -> dict:
         return {
