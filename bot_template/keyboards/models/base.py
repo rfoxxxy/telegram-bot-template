@@ -24,6 +24,25 @@ class ButtonRegistry:
             return cls.registry[button_type]
         raise ValueError(f"Unknown button type: {button_type}")
 
+    @staticmethod
+    def register_buttons():
+        import inspect  # pylint: disable=import-outside-toplevel
+
+        from bot_template.keyboards.models import (  # pylint: disable=import-outside-toplevel
+            bottom_keyboard,
+            inline_keyboard,
+            multi_keyboard,
+        )
+
+        for module in [bottom_keyboard, inline_keyboard, multi_keyboard]:
+            for _, obj in inspect.getmembers(module):
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, BaseKeyboardButton)
+                    and obj is not BaseKeyboardButton
+                ):
+                    ButtonRegistry.register(obj.__name__, obj)
+
 
 @dataclass(slots=True)
 class BaseKeyboardButton(

@@ -2,7 +2,6 @@ import html
 
 import babel.numbers
 import validators
-from aiogram import types
 from aiogram.types import InlineKeyboardButton, KeyboardButton, WebAppInfo
 from babel import Locale
 
@@ -21,11 +20,11 @@ class WebAppButton(BaseKeyboardButton):
         match type(ctx).__name__:
             case "InlineKeyboard":
                 return InlineKeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case "BottomKeyboard":
                 return KeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case _:
                 raise UnsupportedTypeError(
@@ -54,7 +53,7 @@ class PayWebAppButton(BaseKeyboardButton):
         self.val = val
         self.locale = locale
         if not self.locale:
-            self.locale = types.User.get_current().locale
+            self.locale = "en"
         super().__init__(
             "PayWebAppButton",
             f"{get_pay_text(str(locale))} {babel.numbers.format_currency(self.price, self.val, locale=self.locale)}",
@@ -65,11 +64,11 @@ class PayWebAppButton(BaseKeyboardButton):
         match type(ctx).__name__:
             case "InlineKeyboard":
                 return InlineKeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case "BottomKeyboard":
                 return KeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case _:
                 raise UnsupportedTypeError(
@@ -115,11 +114,11 @@ class MarkdownViewWebAppButton(BaseKeyboardButton):
         match type(ctx).__name__:
             case "InlineKeyboard":
                 return InlineKeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case "BottomKeyboard":
                 return KeyboardButton(
-                    self.text, web_app=WebAppInfo(url=self.url)
+                    text=self.text, web_app=WebAppInfo(url=self.url)
                 )
             case _:
                 raise UnsupportedTypeError(

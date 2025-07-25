@@ -1,39 +1,36 @@
+from typing import Any, Awaitable, Callable, Dict
+
 import sentry_sdk
-from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.types import Update
+from aiogram import BaseMiddleware
+from aiogram.types import TelegramObject
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 
 from bot_template import config, dp
 
 
 class SentryContextMiddleware(BaseMiddleware):
-    @staticmethod
-    async def on_pre_process_update(update: Update, data: dict):
-        if (
-            (not update.message)
-            and (not update.callback_query)
-            and (not update.inline_query)
-            and (not update.my_chat_member)
-            and (not update.chosen_inline_result)
-        ):
-            return
-
-        from_user = (
-            update.message
-            or update.callback_query
-            or update.inline_query
-            or update.my_chat_member
-            or update.chosen_inline_result
-        ).from_user
-
-        sentry_sdk.set_user(
-            {
-                "name": from_user.full_name,
-                "id": from_user.id,
-                "username": from_user.username,
-                "update": update.to_python(),
-            }
-        )
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
+    ) -> Any:
+        # TODO: my_chat_member
+        if type(event).__name__ in [
+            "Message",
+            "CallbackQuery",
+            "InlineQuery",
+            "ChosenInlineResult",
+        ]:
+            sentry_sdk.set_user(
+                {
+                    "name": event.from_user.full_name,
+                    "id": event.from_user.id,
+                    "username": event.from_user.username,
+                    "update": event.model_dump_json(),
+                }
+            )
+        return await handler(event, data)
 
 
 sentry_sdk.init(
@@ -43,4 +40,4 @@ sentry_sdk.init(
         "features.sentry", "traces_sample_rate"
     ),
 )
-dp.middleware.setup(SentryContextMiddleware())
+dp.update.outer_middleware(SentryContextMiddleware())

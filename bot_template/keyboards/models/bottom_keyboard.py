@@ -24,7 +24,11 @@ class TextButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text)
+        return KeyboardButton(text=self.text)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
 
     @classmethod
     def deserialize(cls, data: dict):
@@ -42,7 +46,11 @@ class RequestContactButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_contact=True)
+        return KeyboardButton(text=self.text, request_contact=True)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
 
     @classmethod
     def deserialize(cls, data: dict):
@@ -60,7 +68,11 @@ class RequestLocationButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return KeyboardButton(self.text, request_location=True)
+        return KeyboardButton(text=self.text, request_location=True)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(text=data["text"])
 
     @classmethod
     def deserialize(cls, data: dict):
@@ -79,7 +91,8 @@ class RequestPollButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return KeyboardButton(
-            self.text, request_poll=KeyboardButtonPollType(self.poll_type)
+            text=self.text,
+            request_poll=KeyboardButtonPollType(type=self.poll_type),
         )
 
     @classmethod
@@ -108,12 +121,6 @@ class BottomKeyboard(KeyboardMarkupMixin):
         Returns:
             ReplyKeyboardMarkup: aiogram keyboard markup object
         """
-        keyboard = ReplyKeyboardMarkup(
-            resize_keyboard=resize,
-            one_time_keyboard=one_time,
-            input_field_placeholder=placeholder,
-            selective=selective,
-        )
         rows = [
             asyncio.gather(*[btn.build_button(self) for btn in row.buttons])
             for row in self.rows
@@ -121,8 +128,13 @@ class BottomKeyboard(KeyboardMarkupMixin):
 
         buttons_in_rows = await asyncio.gather(*rows)
 
-        for buttons in buttons_in_rows:
-            keyboard.row(*buttons)
+        keyboard = ReplyKeyboardMarkup(
+            keyboard=buttons_in_rows,
+            resize_keyboard=resize,
+            one_time_keyboard=one_time,
+            input_field_placeholder=placeholder,
+            selective=selective,
+        )
         return keyboard
 
     def _build(self) -> ReplyKeyboardMarkup:

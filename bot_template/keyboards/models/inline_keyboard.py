@@ -2,8 +2,11 @@ import asyncio
 from typing import List
 
 import babel.numbers
-from aiogram import types
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    SwitchInlineQueryChosenChat,
+)
 from babel.core import Locale
 
 try:
@@ -16,12 +19,6 @@ from bot_template.keyboards.database import database
 from bot_template.keyboards.exceptions import UnsupportedTypeError
 from bot_template.keyboards.models.base import BaseKeyboardButton, ButtonRow
 from bot_template.keyboards.utils import KeyboardMarkupMixin, get_pay_text
-from bot_template.keyboards.utils.backports.aiogram_inline_keyboard_button import (
-    InlineKeyboardButton,
-)
-from bot_template.keyboards.utils.backports.aiogram_switch_inline_query_chosen_chat import (
-    SwitchInlineQueryChosenChat,
-)
 from bot_template.utils import run_async
 
 
@@ -49,7 +46,7 @@ class CallbackButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(
-            self.text,
+            text=self.text,
             callback_data=await self.__encode_data(
                 self.callback_data, self.additional_data
             ),
@@ -80,7 +77,14 @@ class SwitchInlineButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(
-            self.text, switch_inline_query=self.switch_inline_query
+            text=self.text, switch_inline_query=self.switch_inline_query
+        )
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            switch_inline_query=data["switch_inline_query"],
         )
 
     @classmethod
@@ -107,7 +111,7 @@ class SwitchInlineCurrentChatButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(
-            self.text,
+            text=self.text,
             switch_inline_query_current_chat=self.switch_inline_query,
         )
 
@@ -147,7 +151,7 @@ class SwitchInlineChosenChatButton(BaseKeyboardButton):
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
         return InlineKeyboardButton(
-            self.text,
+            text=self.text,
             switch_inline_query_chosen_chat=SwitchInlineQueryChosenChat(
                 query=self.switch_inline_query,
                 allow_user_chats=self.allow_user_chats,
@@ -184,9 +188,8 @@ class UserProfileButton(BaseKeyboardButton):
     """Inline keyboard button object"""
 
     def __init__(self, text: str, user_id: int):
-        self.user_id = user_id
         super().__init__(
-            "UserProfileButton", text, url=f"tg://user?id={self.user_id}"
+            "UserProfileButton", text, url=f"tg://user?id={user_id}"
         )
 
     async def build_button(self, ctx):
@@ -194,7 +197,7 @@ class UserProfileButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return InlineKeyboardButton(self.text, url=self.url)
+        return InlineKeyboardButton(text=self.text, url=self.url)
 
     def serialize(self) -> dict:
         return {"type": self.type, "text": self.text, "user_id": self.user_id}
@@ -202,6 +205,18 @@ class UserProfileButton(BaseKeyboardButton):
     @classmethod
     def deserialize(cls, data: dict):
         return cls(text=data["text"], user_id=data["user_id"])
+
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(price=data["price"], val=data["val"], locale=data["locale"])
 
 
 class PayButton(BaseKeyboardButton):
@@ -212,7 +227,7 @@ class PayButton(BaseKeyboardButton):
         self.val = val
         self.locale = locale
         if not self.locale:
-            self.locale = types.User.get_current().locale
+            self.locale = "en"
         super().__init__(
             "PayButton",
             f"{get_pay_text(str(locale))} {babel.numbers.format_currency(self.price, self.val, locale=self.locale)}",
@@ -223,7 +238,7 @@ class PayButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return InlineKeyboardButton(self.text, pay=True)
+        return InlineKeyboardButton(text=self.text, pay=True)
 
     def serialize(self) -> dict:
         return {
@@ -249,7 +264,14 @@ class URLButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return InlineKeyboardButton(self.text, url=self.url)
+        return InlineKeyboardButton(text=self.text, url=self.url)
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            text=data["text"],
+            url=data["url"],
+        )
 
     @classmethod
     def deserialize(cls, data: dict):
@@ -269,7 +291,7 @@ class URLPayButton(BaseKeyboardButton):
         self.val = val
         self.locale = locale
         if not self.locale:
-            self.locale = types.User.get_current().locale
+            self.locale = "en"
         super().__init__(
             "URLPayButton",
             f"{get_pay_text(str(locale))} {babel.numbers.format_currency(self.price, self.val, locale=self.locale)}",
@@ -281,7 +303,25 @@ class URLPayButton(BaseKeyboardButton):
             raise UnsupportedTypeError(
                 f"Type {self.type} isn't supported in {type(ctx).__name__}"
             )
-        return InlineKeyboardButton(self.text, url=self.url)
+        return InlineKeyboardButton(text=self.text, url=self.url)
+
+    def serialize(self) -> dict:
+        return {
+            "type": self.type,
+            "url": self.url,
+            "price": self.price,
+            "val": self.val,
+            "locale": self.locale,
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        return cls(
+            url=data["url"],
+            price=data["price"],
+            val=data["val"],
+            locale=data["locale"],
+        )
 
     def serialize(self) -> dict:
         return {
@@ -317,7 +357,6 @@ class InlineKeyboard(KeyboardMarkupMixin):
         Returns:
             InlineKeyboardMarkup: aiogram keyboard markup object
         """
-        keyboard = InlineKeyboardMarkup()
         rows = [
             asyncio.gather(*[btn.build_button(self) for btn in row.buttons])
             for row in self.rows
@@ -325,8 +364,8 @@ class InlineKeyboard(KeyboardMarkupMixin):
 
         buttons_in_rows = await asyncio.gather(*rows)
 
-        for buttons in buttons_in_rows:
-            keyboard.row(*buttons)
+        keyboard = InlineKeyboardMarkup(inline_keyboard=buttons_in_rows)
+
         return keyboard
 
     def _build(self) -> InlineKeyboardMarkup:

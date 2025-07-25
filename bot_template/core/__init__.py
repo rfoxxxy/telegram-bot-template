@@ -1,7 +1,13 @@
+import asyncio
 from asyncio import AbstractEventLoop
-from typing import Awaitable
+from typing import Awaitable, List
 
-from aiogram import Dispatcher, executor
+from aiogram import Bot, Dispatcher
+from aiogram.webhook.aiohttp_server import (
+    SimpleRequestHandler,
+    setup_application,
+)
+from aiohttp import web
 
 try:
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -23,10 +29,12 @@ class BotCore:
         "project_name",
         "is_prod",
         "dp",
+        "bots",
         "loop",
         "config",
         "webhook",
         "task_manager",
+        "webhook_paths",
     ]
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -34,6 +42,7 @@ class BotCore:
         project_name: str,
         is_prod: bool,
         dp: Dispatcher,  # pylint: disable=invalid-name
+        bot: List[Bot] | Bot,
         loop: AbstractEventLoop,
         config: ConfigManager,
         scheduler: "AsyncIOScheduler" = None,
@@ -42,13 +51,18 @@ class BotCore:
         self.project_name = project_name
         self.is_prod = is_prod
         self.dp = dp  # pylint: disable=invalid-name
+        self.bots = [bot] if not isinstance(bot, list) else bot
         self.loop = loop
         self.config = config
         self.webhook = config.get_item("features", "use_webhook")
         self.task_manager = TaskManager(self.loop, scheduler)
+        self.webhook_paths = self.config.get_item("telegram", "bots")
+        self.webhook_paths = [
+            _bot.get("webhook_path") for _bot in self.webhook_paths
+        ]
 
         if self.dp is not None:
-            self.dp.bot["core"] = self
+            self.dp["core"] = self
 
     def add_core_task(self, task: BaseCoreTask):
         """Add core task to run. Core tasks running once on startup
@@ -111,18 +125,27 @@ class BotCore:
                 CallbackButtonMiddleware,
             )
 
-            dispatcher.middleware.setup(CallbackButtonMiddleware())
+            dispatcher.callback_query.outer_middleware(
+                CallbackButtonMiddleware()
+            )
+        if self.config.get_item("features", "use_sulguk"):
+            from sulguk import (  # pylint: disable=import-outside-toplevel
+                AiogramSulgukMiddleware,
+            )
+
+            for bot in self.bots:
+                bot.session.middleware(AiogramSulgukMiddleware())
 
         ModuleLoader(self.project_name, self.is_prod, self.config).load_all()
 
         try:
-            from bot_template.keyboards.loader import (  # pylint: disable=import-outside-toplevel
-                auto_register_buttons,
+            from bot_template.keyboards.models.base import (  # pylint: disable=import-outside-toplevel
+                ButtonRegistry,
             )
 
-            auto_register_buttons()
-        except ImportError:
-            pass
+            ButtonRegistry.register_buttons()
+        except ImportError as e:
+            logger.exception(e)
 
         if self.config.get_item("features", "use_database"):
             from bot_template import (  # pylint: disable=import-outside-toplevel
@@ -145,7 +168,6 @@ class BotCore:
         """
         logger.warning("Closing Redis instance...")
         await dispatcher.storage.close()
-        await dispatcher.storage.wait_closed()
         logger.info("Redis instance closed!")
 
     async def _startup_webhook(self, dispatcher: Dispatcher) -> Awaitable:
@@ -160,20 +182,30 @@ class BotCore:
 
         skip_updates = self.config.get_item("telegram", "skip_updates")
 
-        if skip_updates:
-            await self.dp.bot.delete_webhook(True)
+        async def set_bot_settings(bot: Bot, webhook_path: str):
+            if skip_updates:
+                await bot.delete_webhook(True)
 
-        webhook_url = f"{self.config.get_item('features.webhook', 'host')}{self.config.get_item('features.webhook', 'path')}"
-        webhook_info = await self.dp.bot.get_webhook_info()
-        if (
-            webhook_url != webhook_info.url
-            or webhook_info.max_connections != 100
-        ):
-            await self.dp.bot.set_webhook(
-                webhook_url,
-                max_connections=100,
-                drop_pending_updates=skip_updates,
-            )
+            webhook_url = f"{self.config.get_item('features.webhook', 'host')}{webhook_path}"
+            webhook_info = await bot.get_webhook_info()
+            # print(webhook_info)
+            if (
+                webhook_url != webhook_info.url
+                or webhook_info.max_connections != 100
+            ):
+                await bot.set_webhook(
+                    webhook_url,
+                    max_connections=100,
+                    drop_pending_updates=skip_updates,
+                )
+
+        await asyncio.gather(
+            *[
+                set_bot_settings(bot, self.webhook_paths[index])
+                for index, bot in enumerate(self.bots)
+            ]
+        )
+
         return await self._startup(dispatcher)
 
     async def _startup_polling(self, dispatcher: Dispatcher) -> Awaitable:
@@ -186,31 +218,40 @@ class BotCore:
             Awaitable: main startup logic
         """
 
-        webhook_info = await self.dp.bot.get_webhook_info()
-        if webhook_info.url:
-            await self.dp.bot.delete_webhook(
-                self.config.get_item("telegram", "skip_updates")
-            )
+        skip_updates = self.config.get_item("telegram", "skip_updates")
+
+        async def set_bot_settings(bot: Bot):
+            # print(await bot.me())
+            webhook_info = await bot.get_webhook_info()
+
+            if webhook_info.url or skip_updates:
+                await bot.delete_webhook(
+                    self.config.get_item("telegram", "skip_updates")
+                )
+
+        await asyncio.gather(*[set_bot_settings(bot) for bot in self.bots])
+
         return await self._startup(dispatcher)
 
     def start(self):
         """Start bot"""
         logger.info(f"Starting {self.project_name}...")
         if self.webhook:
-            executor.start_webhook(
-                self.dp,
-                webhook_path=self.config.get_item("features.webhook", "path"),
+            self.dp.startup.register(self._startup_webhook)
+            self.dp.shutdown.register(self._shutdown)
+            app = web.Application()
+            for index, bot in enumerate(self.bots):
+                webhook_requests_handler = SimpleRequestHandler(self.dp, bot)
+                webhook_requests_handler.register(
+                    app, path=self.webhook_paths[index]
+                )
+                setup_application(app, self.dp, bot=bot)
+            web.run_app(
+                app=app,
                 host=self.config.get_item("features.webhook", "webapp_host"),
                 port=self.config.get_item("features.webhook", "webapp_port"),
-                loop=self.loop,
-                on_startup=self._startup_webhook,
-                on_shutdown=self._shutdown,
             )
         else:
-            executor.start_polling(
-                self.dp,
-                skip_updates=self.config.get_item("telegram", "skip_updates"),
-                loop=self.loop,
-                on_startup=self._startup_polling,
-                on_shutdown=self._shutdown,
-            )
+            self.dp.startup.register(self._startup_polling)
+            self.dp.shutdown.register(self._shutdown)
+            self.loop.run_until_complete(self.dp.start_polling(*self.bots))

@@ -1,27 +1,41 @@
-from aiogram.dispatcher.handler import CancelHandler
-from aiogram.dispatcher.middlewares import BaseMiddleware
+from typing import Any, Awaitable, Callable, Dict
+
+from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message
 
 from bot_template import cache, dp
 
 
 class ThrottlingMiddleware(BaseMiddleware):
-    async def on_pre_process_message(self, message: Message, data: dict):
-        if message.is_command():
-            if not cache.get(message.from_user.id):
-                cache[message.from_user.id] = True
-                return
-            await message.reply("Тише-тише! Попробуй снова через 1 сек.")
-            raise CancelHandler
+    async def __call__(
+        self,
+        handler: Callable[
+            [CallbackQuery | Message, Dict[str, Any]], Awaitable[Any]
+        ],
+        event: CallbackQuery | Message,
+        data: Dict[str, Any],
+    ) -> Any:
+        match type(event).__name__:
+            case "Message":
+                if (event.text or event.caption) and (event.text or event.caption).startswith("/"):  # type: ignore
+                    if not cache.get(event.from_user.id):  # type: ignore
+                        cache[event.from_user.id] = True  # type: ignore
+                    else:
+                        await event.reply(
+                            "Тише-тише! Попробуй снова через 1 сек."
+                        )
+                        return
+            case "CallbackQuery":
+                if not cache.get(event.from_user.id):  # type: ignore
+                    cache[event.from_user.id] = True  # type: ignore
+                else:
+                    await event.answer(
+                        "Тише-тише! Попробуй снова через 1 сек.",
+                        show_alert=True,
+                    )
+                    return
+        return await handler(event, data)
 
-    async def on_pre_process_callback_query(
-        self, call: CallbackQuery, data: dict
-    ):
-        if not cache.get(call.from_user.id):
-            cache[call.from_user.id] = True
-            return
-        await call.answer("Тише-тише! Попробуй снова через 1 сек.", True)
-        raise CancelHandler
 
-
-dp.middleware.setup(ThrottlingMiddleware())
+dp.message.outer_middleware(ThrottlingMiddleware())
+dp.callback_query.outer_middleware(ThrottlingMiddleware())

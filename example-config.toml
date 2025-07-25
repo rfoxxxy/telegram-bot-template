@@ -3,9 +3,12 @@
 
 [telegram]
 prod = false
-skip_updates = false
+skip_updates = true
+
+[[telegram.bots]]
 token = ""
 beta_token = "444:TEST"
+webhook_path = "/bot2/webhook"
 
 [bot]
 admins = [944176367]
@@ -18,6 +21,7 @@ supported_modules = ["filters", "middlewares", "modules"]
 [features]
 use_webhook = false
 use_custom_server = false
+use_sulguk = false          # group: sulguk-parsemode
 use_database = false        # group: database
 use_uvloop = false          # group: uvloop
 use_sentry = false          # group: sentry
@@ -31,7 +35,6 @@ server = 'https://api.telegram.org/'
 
 [features.webhook]
 host = "https://bot_template.neonteam.cc"
-path = "/bot/webhook"
 webapp_host = "0.0.0.0"
 webapp_port = 3939
 

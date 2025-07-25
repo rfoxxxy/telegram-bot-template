@@ -60,7 +60,10 @@ if Base:
                 ),
             ),
             future=True,
-            poolclass=NullPool,
+            pool=NullPool
+            if config.get_item("features.modern_callback", "driver")
+            != "sqlite+aiosqlite"
+            else None,
         )  # noqa: e126
 
         Session: AsyncSession = sessionmaker(
@@ -86,7 +89,7 @@ if Base:
                 query=key,
                 original_query=data,
                 data=b64encode(pickle.dumps(additional_data)).decode(),
-                die_time=(datetime.utcnow() + timedelta(hours=24)).timestamp(),
+                die_time=(datetime.utcnow() + timedelta(days=7)).timestamp(),
             )
             session.add(callback)
             await session.commit()
